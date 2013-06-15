@@ -35,6 +35,10 @@ class CustomPostType extends QuickConfig
     protected function default_rewrite_with_front() {
         return true;
     }
+    
+    protected function default_has_archive() {
+        return true;
+    }
 
     protected function setup_post_type()
     {
@@ -68,10 +72,11 @@ class CustomPostType extends QuickConfig
                 'menu_icon' => $me->menu_icon ? \get_stylesheet_directory_uri() . $me->menu_icon : null,
                 'hierarchical' => $me->hierarchical,
                 'supports'=> $me->supports,
-                'taxonomies' => $me->taxonomies
+                'taxonomies' => $me->taxonomies,
+                'has_archive' => $me->has_archive,
             ));
 
-        },9999);
+        },10);
     }
 }
 
