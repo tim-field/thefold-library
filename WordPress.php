@@ -148,4 +148,24 @@ class WordPress{
             }
         });
     }
+
+    function get_youtube_embed($url,$attributes=array())
+    {
+        $atts = array_merge($attributes,array('class'=>'youtube-player','width'=>'640','height'=>385,'allowfullscreen','frameborder'=>0));
+
+        $html = '<iframe ';
+        foreach($atts as $a => $v)
+            $html .= is_numeric($a) ? $v : " $a=\"$v\" ";
+
+        $html .= " src=\"http://www.youtube.com/embed/".static::get_youtube_id($url)."\" ";
+
+        return $html . '></iframe>';
+    }
+
+    function get_youtube_id($url)
+    {
+        if(preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i', $url, $match)) {
+            return $match[1];
+        }
+    }
 }
