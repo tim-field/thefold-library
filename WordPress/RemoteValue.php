@@ -14,11 +14,11 @@ abstract class RemoteValue
     //return a namespace for the meta keys 
     abstract static function get_meta_prefix();
 
-    public static function get_value( $field, $id = null)
+    public static function get_value( $field, $id = null, $force_update=false)
     {
         if(!$id) $id = \get_the_ID();
 
-        if(!$value = static::get_local( $id, $field )) {
+        if($force_update || !$value = static::get_local( $id, $field )) {
 
             $data = static::set_local( $id, static::get_data($id) );
 
