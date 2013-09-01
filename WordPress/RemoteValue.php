@@ -23,7 +23,7 @@ abstract class RemoteValue
             $data = static::set_local( $id, static::get_data($id) );
 
             if(!isset($data[$field]))
-                throw new \Exception('Unknown vimeo field'.$field);
+                throw new \Exception('Unknown remote field'.$field);
 
             $value = $data[$field];
         }
