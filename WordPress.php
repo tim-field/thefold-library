@@ -112,40 +112,4 @@ class WordPress{
         static::$log->Log( is_array($message) ? print_r($message,true) : $message,$level);
     }
 
-    static function setting_page($setting, $display_name, $setting_fields, $page_callback=null)
-    {
-        add_action('admin_menu', function() use($display_name, $setting, $page_callback ) {
-
-            add_options_page($display_name, $display_name, 'manage_options', $setting, function() use ($page_callback, $setting, $display_name) {
-
-                if($page_callback)
-                    $page_callback();
-                else { ?>
-                    <div class="wrap">
-                        <?php screen_icon(); ?>
-                        <h2><?=$display_name?></h2>
-
-                        <form method="post" action="options.php">
-                            <?php settings_fields($setting); ?>
-                            <?php do_settings_sections($setting); ?>
-                            <input name="Submit" type="submit" value="Save Changes"/>
-                        </form>
-                    </div>
-                <?php
-                }
-            });
-        });
-
-        add_action('admin_init', function() use($setting, $setting_fields){
-
-            register_setting( $setting, $setting );
-
-            add_settings_section($setting, 'Main Settings', function(){echo '<p>Main description of this section here</p>';}, $setting);
-
-            foreach($setting_fields as $field) {
-                add_settings_field($field->name, $field->title, $field->get_display_callback($setting), $setting, $setting);
-                //todo records sections used ?
-            }
-        });
-    }
 }
