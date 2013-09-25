@@ -36,7 +36,7 @@ class Gmail {
                 
                 $html_section = null;
 
-                if($fetchbody) {
+                if($fetchbody) { //todo only reads html
 
                     $raw_parts = imap_fetchstructure($stream, $email->uid, FT_UID);
 
