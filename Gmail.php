@@ -33,13 +33,30 @@ class Gmail {
             $fetched = imap_fetch_overview ($stream, implode(',',$emails), FT_UID);
 
             $emails = array_map ( function ($email) use ($stream, $fetchbody) {
+                
+                $html_section = null;
+
+                if($fetchbody) {
+
+                    $raw_parts = imap_fetchstructure($stream, $email->uid, FT_UID);
+
+                    $parts = $this->flattenParts($raw_parts->parts);
+
+                    foreach($parts as $section => $part) {
+
+                        if($part->subtype == 'HTML'){
+                            $html_section = $section;
+                            break;
+                        }
+                    }
+                }
 
                 return array (
                     'uid'=> $email->uid,
                     'subject'=> $email->subject,
                     'from'=> $email->from,
                     'date'=> $email->date,
-                    'body'=> $fetchbody ? imap_fetchbody ($stream, $email->uid, 2, FT_UID | FT_PEEK ) : ''
+                    'body'=> $fetchbody && $html_section ? imap_fetchbody ($stream, $email->uid, $html_section, FT_UID | FT_PEEK ) : ''
                 );
 
             }, $fetched );
@@ -66,5 +83,28 @@ class Gmail {
         }
 
         return $stream;
+    }
+
+    protected function flattenParts($messageParts, $flattenedParts = array(), $prefix = '', $index = 1, $fullPrefix = true) {
+
+        foreach($messageParts as $part) {
+            $flattenedParts[$prefix.$index] = $part;
+            if(isset($part->parts)) {
+                if($part->type == 2) {
+                    $flattenedParts = $this->flattenParts($part->parts, $flattenedParts, $prefix.$index.'.', 0, false);
+                }
+                elseif($fullPrefix) {
+                    $flattenedParts = $this->flattenParts($part->parts, $flattenedParts, $prefix.$index.'.');
+                }
+                else {
+                    $flattenedParts = $this->flattenParts($part->parts, $flattenedParts, $prefix);
+                }
+                unset($flattenedParts[$prefix.$index]->parts);
+            }
+            $index++;
+        }
+
+        return $flattenedParts;
+
     }
 }
