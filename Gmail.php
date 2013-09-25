@@ -37,6 +37,7 @@ class Gmail {
             $emails = array_map ( function ($email) use ($stream, $fetchbody, $me) {
                 
                 $html_section = null;
+                $message = '';
 
                 if($fetchbody) { //todo only reads html
 
@@ -51,6 +52,19 @@ class Gmail {
                             break;
                         }
                     }
+
+                    if($html_section) { 
+
+                        $message = imap_fetchbody ($stream, $email->uid, $html_section, FT_UID | FT_PEEK );
+
+                        if($part->encoding == 3) {
+                            $message = imap_base64($message);
+                        } else if($part->encoding == 1) {
+                            $message = imap_8bit($message);
+                        } else {
+                            $message = imap_qprint($message);
+                        }
+                    }
                 }
 
                 return array (
@@ -58,7 +72,7 @@ class Gmail {
                     'subject'=> $email->subject,
                     'from'=> $email->from,
                     'date'=> $email->date,
-                    'body'=> $fetchbody && $html_section ? imap_fetchbody ($stream, $email->uid, $html_section, FT_UID | FT_PEEK ) : ''
+                    'body'=> $message 
                 );
 
             }, $fetched );
