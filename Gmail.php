@@ -32,7 +32,9 @@ class Gmail {
 
             $fetched = imap_fetch_overview ($stream, implode(',',$emails), FT_UID);
 
-            $emails = array_map ( function ($email) use ($stream, $fetchbody) {
+            $me = $this;
+
+            $emails = array_map ( function ($email,$me) use ($stream, $fetchbody) {
                 
                 $html_section = null;
 
@@ -40,7 +42,7 @@ class Gmail {
 
                     $raw_parts = imap_fetchstructure($stream, $email->uid, FT_UID);
 
-                    $parts = $this->flattenParts($raw_parts->parts);
+                    $parts = $me->flattenParts($raw_parts->parts);
 
                     foreach($parts as $section => $part) {
 
