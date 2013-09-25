@@ -34,7 +34,7 @@ class Gmail {
 
             $me = $this;
 
-            $emails = array_map ( function ($email,$me) use ($stream, $fetchbody) {
+            $emails = array_map ( function ($email) use ($stream, $fetchbody, $me) {
                 
                 $html_section = null;
 
