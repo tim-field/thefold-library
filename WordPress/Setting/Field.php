@@ -30,21 +30,19 @@ class Field
             return function() use ($setting_group, $me) { 
                 
                 $options = get_option($setting_group);
-                $value = isset($options[$this->name]) ? $options[$this->name] : '';
+                $value = isset($options[$me->name]) ? $options[$me->name] : '';
 
-                call_user_func($this->display_callback, $value, $this->name, $setting_group, $options);
+                call_user_func($me->display_callback, $value, $me->name, $setting_group, $options);
             };
         
         } else {
 
-            $that = $this;
-        
-            return function() use ($setting_group, $that) {
+            return function() use ($setting_group, $me) {
                 
                 $options = get_option($setting_group);
-                $value = isset($options[$that->name]) ? $options[$that->name] : '';
+                $value = isset($options[$me->name]) ? $options[$me->name] : '';
                 
-                echo "<input id='{$setting_group}_{$that->name}' name='{$setting_group}[{$that->name}]' type='text' value='{$value}' />"; 
+                echo "<input id='{$setting_group}_{$me->name}' name='{$setting_group}[{$me->name}]' type='text' value='{$value}' />"; 
             };
         }
     }
