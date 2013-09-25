@@ -9,7 +9,7 @@ class Field
     public $display_callback;
     public $section;
 
-    function __construct($name, $title, Section $section, \callable $display_callback=null)
+    function __construct($name, $title, Section $section, $display_callback=null)
     {
         $this->name = $name;
         $this->title = $title;
