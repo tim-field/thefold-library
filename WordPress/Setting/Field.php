@@ -36,13 +36,15 @@ class Field
             };
         
         } else {
+
+            $that = $this;
         
-            return function() use ($setting_group) {
+            return function() use ($setting_group, $that) {
                 
                 $options = get_option($setting_group);
-                $value = isset($options[$this->name]) ? $options[$this->name] : '';
+                $value = isset($options[$that->name]) ? $options[$that->name] : '';
                 
-                echo "<input id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' type='text' value='{$value}' />"; 
+                echo "<input id='{$setting_group}_{$that->name}' name='{$setting_group}[{$that->name}]' type='text' value='{$value}' />"; 
             };
         }
     }
