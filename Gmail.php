@@ -87,7 +87,7 @@ class Gmail {
         return $stream;
     }
 
-    protected function flattenParts($messageParts, $flattenedParts = array(), $prefix = '', $index = 1, $fullPrefix = true) {
+    public function flattenParts($messageParts, $flattenedParts = array(), $prefix = '', $index = 1, $fullPrefix = true) {
 
         foreach($messageParts as $part) {
             $flattenedParts[$prefix.$index] = $part;
