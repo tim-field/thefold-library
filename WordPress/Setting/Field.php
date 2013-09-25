@@ -32,7 +32,7 @@ class Field
                 $options = get_option($setting_group);
                 $value = isset($options[$this->name]) ? $options[$this->name] : '';
 
-                $me->display_callback($value, $this->name, $setting_group, $options); 
+                call_user_func($this->display_callback, $value, $this->name, $setting_group, $options);
             };
         
         } else {

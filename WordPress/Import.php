@@ -1,5 +1,35 @@
 <?php
-namespace TheFold;
+namespace TheFold\Wordpress;
+
+/**
+ *     $ID = Import::import_post(
+       Import::map_data(
+            array(
+                'ID' => 'post_id',
+                'post_title' => 'name',
+                'post_content' => 'description',
+                'post_date' => function($data){
+                    return date('Y-m-d H:i:s',strtotime($data['start_time']));
+                },
+                'post_date_gmt' => function($data){
+                    return gmdate('Y-m-d H:i:s',strtotime($data['start_time']));
+                },
+                'latitude' => function($data){ return $data['venue']['latitude']; },
+                'longitude' =>function($data){ return  $data['venue']['longitude']; },
+                'city' => function($data){ return  $data['venue']['city']; },
+                'venue_id' => function($data){ return  $data['venue_id']; },
+
+                'attending_count' => 'attending_count',
+                'unsure_count' => 'unsure_count',
+                
+                'fb_id' => 'id',
+            ),
+            $detail
+       ),
+       Events\EVENT_CPT,
+       'publish'
+   );
+ */
 
 class Import
 {
