@@ -112,4 +112,10 @@ class WordPress{
         static::$log->Log( is_array($message) ? print_r($message,true) : $message,$level);
     }
 
+    static function report_error($error)
+    {
+        //TODO email someone
+        static::log($error, KLogger::ERROR);
+    }
+
 }
