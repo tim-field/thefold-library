@@ -31,8 +31,8 @@ class Webhook
     public function install()
     {
         $this->getContectextIO()->addWebhook($this->getAccountID(), array(
-            'callback_url' => static::CALLBACK_URL,
-            'failure_notif_url' => static::CALLBACK_FAIL_URL,
+            'callback_url' => site_url(static::CALLBACK_URL),
+            'failure_notif_url' => site_url(static::CALLBACK_FAIL_URL),
             'filter_to' => $this->EMAIL,
             'include_body' => 1,
             'body_type' => 'text/html'
