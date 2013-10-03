@@ -23,9 +23,6 @@ class Webhook
         $this->KEY = $key; 
         $this->SECRET = $secret; 
         $this->EMAIL = $email; 
-
-        $me = $this;//until 5.4 on server
-
     }
 
     public function install()
@@ -76,6 +73,10 @@ class Webhook
         if (!$this->ACCOUNT_ID){
 
             $r = $this->getContectextIO()->listAccounts();
+
+            if(!$r){
+                throw new \Exception(print_r($this->getContectextIO()->getLastResponse(), true));
+            }
 
             foreach ($r->getData() as $account) {
 
