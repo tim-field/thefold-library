@@ -35,6 +35,8 @@ class Import
 {
     static function import_post($post_data, $type='post', $status=null)
     {
+        Wordpress::log($post_data);
+
         $core['post_type'] = $type;
         $core['post_status'] = $status;
 
