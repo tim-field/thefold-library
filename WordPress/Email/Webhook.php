@@ -48,7 +48,7 @@ class Webhook
                 $body = json_decode(file_get_contents('php://input'), true);
                 
                 if ($body['signature'] == hash_hmac('sha256', $body['timestamp'].$body['token'], $this->SECRET)){
-                    call_user_func($onEmailCallback, $body['message_data'] $body); 
+                    call_user_func($onEmailCallback, $body['message_data'], $body); 
                 }
             },
 
