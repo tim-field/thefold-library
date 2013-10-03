@@ -38,17 +38,17 @@ class Webhook
 
     public function addWebhook($onEmailCallback, $onErrorCallback)
     {
-        WordPress::init_url_access(array(
+        $secret = $this->SECRET; // until php5.4
 
-            static::CALLBACK_URL => function() use ($onEmailCallback){
+        WordPress::init_url_access(array(
+            static::CALLBACK_URL => function() use ($onEmailCallback, $secret) {
 
                 $body = json_decode(file_get_contents('php://input'), true);
                 
-                if ($body['signature'] == hash_hmac('sha256', $body['timestamp'].$body['token'], $this->SECRET)){
+                if ($body['signature'] == hash_hmac('sha256', $body['timestamp'].$body['token'], $secret)){
                     call_user_func($onEmailCallback, $body['message_data'], $body); 
                 }
             },
-
             static::CALLBACK_FAIL_URL => function() use ($onErrorCallback){
 
                 $body = json_decode(file_get_contents('php://input'), true);
