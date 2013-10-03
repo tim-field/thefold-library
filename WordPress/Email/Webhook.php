@@ -47,6 +47,8 @@ class Webhook
                 
                 if ($body['signature'] == hash_hmac('sha256', $body['timestamp'].$body['token'], $secret)){
                     call_user_func($onEmailCallback, $body['message_data'], $body); 
+                } else {
+                    WordPress::log('Webhook auth failed');
                 }
             },
             static::CALLBACK_FAIL_URL => function() use ($onErrorCallback){
