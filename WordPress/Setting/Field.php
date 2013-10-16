@@ -9,7 +9,7 @@ class Field
     public $display_callback;
     public $section;
 
-    function __construct($name, $title, Section $section, \callable $display_callback=null)
+    function __construct($name, $title, Section $section, $display_callback=null)
     {
         $this->name = $name;
         $this->title = $title;
@@ -30,19 +30,19 @@ class Field
             return function() use ($setting_group, $me) { 
                 
                 $options = get_option($setting_group);
-                $value = isset($options[$this->name]) ? $options[$this->name] : '';
+                $value = isset($options[$me->name]) ? $options[$me->name] : '';
 
-                call_user_func($this->display_callback, $value, $this->name, $setting_group, $options);
+                call_user_func($me->display_callback, $value, $me->name, $setting_group, $options);
             };
         
         } else {
-        
-            return function() use ($setting_group) {
+
+            return function() use ($setting_group, $me) {
                 
                 $options = get_option($setting_group);
-                $value = isset($options[$this->name]) ? $options[$this->name] : '';
+                $value = isset($options[$me->name]) ? $options[$me->name] : '';
                 
-                echo "<input id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' type='text' value='{$value}' />"; 
+                echo "<input id='{$setting_group}_{$me->name}' name='{$setting_group}[{$me->name}]' type='text' value='{$value}' />"; 
             };
         }
     }
