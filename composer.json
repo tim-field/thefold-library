@@ -1,0 +1,24 @@
+{
+    "name": "thefold/lib",
+    "type": "library",
+    "description": "Library for TheFold",
+    "keywords": ["wordpress","library"],
+    "homepage": "http://thefold.co.nz",
+    "license": "MIT",
+    "authors": [
+            {
+                "name": "Tim Field",
+                "email": "tim@thefold.co.nz",
+                "homepage": "http://www.thefold.co.nz",
+                "role": "Developer"
+            }
+        ],
+    "require": {
+            "php": ">=5.4.0"
+        },
+    "autoload": {
+            "psr-0": {
+                        "Monolog": "src"
+                    }
+        }
+}
