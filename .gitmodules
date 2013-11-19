@@ -1,3 +1,0 @@
-[submodule "WordPress/Email/ContextIO"]
-	path = WordPress/Email/ContextIO
-	url = git@github.com:contextio/PHP-ContextIO.git
