@@ -2,8 +2,8 @@
     "name": "thefold/lib",
     "type": "library",
     "description": "Library for TheFold",
-    "keywords": ["wordpress","library"],
-    "homepage": "http://thefold.co.nz",
+    "keywords": ["wordpress","library","php"],
+    "homepage": "http://www.thefold.co.nz",
     "license": "MIT",
     "authors": [
             {
@@ -17,8 +17,6 @@
             "php": ">=5.4.0"
         },
     "autoload": {
-            "psr-0": {
-                        "TheFold": "library"
-                    }
+            "psr-0": {"TheFold\\": "src/"}
         }
 }
