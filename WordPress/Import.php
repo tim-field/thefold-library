@@ -154,7 +154,7 @@ class Import
         );
     }
 
-    function create_attachement($path, $basename=null){
+    static function create_attachment($path, $basename=null){
 
         if(empty($path)) return null;
 

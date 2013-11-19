@@ -42,14 +42,11 @@ class WordPress{
  *
  * Example usage
 
-\add_action( 'init', function() {
-    init_url_access( array(
-
-        '/filepickerIO/zencoderNotify/' => function($request){
-            zencoder_notify();
-        }
-    ))
-});
+ WordPress::init_url_access(array(
+     'hello/[a-z0-9_-]+' =>      function($request_uri) {
+         echo 'hello '. $request_uri;
+     })
+);
  */
 
     static function init_url_access($url_callbacks){
@@ -118,4 +115,15 @@ class WordPress{
         static::log($error, KLogger::ERROR);
     }
 
+    static public function get_user_role($user=null)
+    {
+        if(is_numeric($user))
+            $user = new WP_User($user);
+
+        if(!$user)
+            $user = wp_get_current_user();
+
+        $user_roles = $user->roles;
+        return $user_roles ? array_shift($user_roles) : null;
+    }
 }
