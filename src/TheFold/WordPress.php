@@ -1,12 +1,8 @@
 <?php
-
 namespace TheFold;
 
 class WordPress{
     
-    const LOG_LEVEL = KLogger::DEBUG;
-    const LOG_FILE = 'plugin.log';
-    protected static $log;
 
     static function render_view($view, $view_params=array())
     {
@@ -82,8 +78,6 @@ class WordPress{
 
             global $wp_query;
 
-            //static::log($wp_query->query_vars);
-
             foreach($url_callbacks as $url_key => $callback) {
 
                 if ( $wp_query->get( $query_var_name($url_key) ) ){
@@ -100,14 +94,6 @@ class WordPress{
         });
     }
    
-    static function log($message,$level=KLogger::DEBUG)
-    {
-        if(!static::$log){
-            static::$log = new KLogger(static::plugin_dir().'/'.static::LOG_FILE,static::LOG_LEVEL);
-        }
-
-        static::$log->Log( is_array($message) ? print_r($message,true) : $message,$level);
-    }
 
     static function report_error($error)
     {
