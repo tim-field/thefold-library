@@ -185,7 +185,7 @@ class Solr{
          list($sort, $type) = $params['sort'];
      }
      else {
-         $query->addSort('date', $query::SORT_DESC);
+         $query->addSort('displaydate', $query::SORT_DESC);
      }
 
      if(!$params['nopaging']) {
