@@ -23,7 +23,7 @@ class WordPress{
 
         if($return) ob_start();
 
-        \get_template_part($slug, $name);
+        get_template_part($slug, $name);
         
         if($return) 
             return ob_get_clean();

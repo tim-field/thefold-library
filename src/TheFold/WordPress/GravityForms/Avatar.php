@@ -22,7 +22,7 @@ class Avatar{
     protected function init_hooks()
     {
 
-        add_action("gform_after_submission", function($entry, $form){
+        add_action( 'gform_after_submission', function($entry, $form){
 
             $gf = new GravityForm($form,$entry);
 

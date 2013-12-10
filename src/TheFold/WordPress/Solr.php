@@ -64,6 +64,26 @@ class Solr{
          if($count) $return[$value] = $count;
      }
 
+     ksort($return);
+
+     return $return;
+ }
+
+ function get_facets($qparams){
+
+     $facets = $this->facets();
+
+     $return = array();
+     foreach($facets as $facet){
+
+         if($values = $this->get_facet($facet)){
+            
+            $return[$facet] = $values; 
+         }
+     }
+
+     ksort($return);
+
      return $return;
  }
 
