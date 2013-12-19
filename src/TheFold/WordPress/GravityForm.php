@@ -20,6 +20,13 @@ class GravityForm
                 $value = isset($this->entries[$id]) ? $this->entries[$id] : $_FILES['input_'.$id]['tmp_name'];
             } else if (isset($_POST['input_'.$id])) {
                 $value = isset($this->entries[$id]) ? $this->entries[$id] : $_POST['input_'.$id];
+            } else if (isset($_POST['input_'.$id.'_1'])) {
+                $i = 1;
+                $value = [];
+                while(isset($_POST['input_'.$id.'_'.$i])) {
+                    $value[] = $_POST['input_'.$id.'_'.$i];
+                    $i ++;
+                }
             }
         }
 
