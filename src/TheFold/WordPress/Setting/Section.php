@@ -14,6 +14,8 @@ class Section
     #@param string $page The slug-name of the settings page on which to show the section. Built-in pages include 'general', 'reading', 'writing', 'discussion', 'media', etc. Create your own using add_options_page();
     protected $page;
 
+    protected $added = false;
+
     function __construct($id, $title, $callback, $page) {
         $this->id = $id;
         $this->title = $title;
@@ -26,7 +28,14 @@ class Section
     }
 
     function add(){
-        add_settings_section($this->id, $this->title, $this->callback, $this->page);
+
+        if(!$this->added){
+
+            add_settings_section($this->id, $this->title, $this->callback, $this->page);
+
+        }
+
+        $this->added = true;
     }
 }
 

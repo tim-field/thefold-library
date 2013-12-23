@@ -28,12 +28,13 @@ class Page
                     <div class="wrap">
                         <?php screen_icon(); ?>
                         <h2><?=$display_name?></h2>
-
-                        <form method="post" action="options.php">
-                            <?php settings_fields($setting); ?>
-                            <?php do_settings_sections($setting); ?>
-                            <input name="Submit" type="submit" value="Save Changes"/>
-                        </form>
+                            <form method="post" action="options.php">
+                            <?php
+                                settings_fields($setting); 
+                                do_settings_sections($setting);
+                                submit_button();
+                            ?>
+                            </form>
                     </div>
 <?php
                 }

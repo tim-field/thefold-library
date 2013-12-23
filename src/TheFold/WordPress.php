@@ -4,10 +4,10 @@ namespace TheFold;
 class WordPress{
     
 
-    static function render_view($view, $view_params=array())
+    static function render_view($view, $view_params=array(),$dir)
     {
         extract($view_params);
-        include static::plugin_dir() .'/views/'.$view;
+        include $dir .'/views/'.$view;
     }
 
     static function render_template($slug, $name = null, $view_params=array(), $return=false)
@@ -27,10 +27,6 @@ class WordPress{
         
         if($return) 
             return ob_get_clean();
-    }
-
-    static function plugin_dir() {
-        return realpath(__DIR__.'/../../');
     }
 
 
@@ -111,5 +107,17 @@ class WordPress{
 
         $user_roles = $user->roles;
         return $user_roles ? array_shift($user_roles) : null;
+    }
+    
+    static public function get_option($namespace,$key=null)
+    {
+        $options = get_option($namespace);
+
+        if($key)
+            $return = isset($options[$key]) ? $options[$key] : null;
+        else
+            $return = $options;
+
+        return $return;
     }
 }

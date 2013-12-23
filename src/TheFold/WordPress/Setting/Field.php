@@ -23,28 +23,28 @@ class Field
 
     function get_display_callback($setting_group){
 
-        $me = $this;
-
         if($this->display_callback) {
         
-            return function() use ($setting_group, $me) { 
+            return function() use ($setting_group) { 
                 
                 $options = get_option($setting_group);
-                $value = isset($options[$me->name]) ? $options[$me->name] : '';
+                $value = isset($options[$this->name]) ? $options[$this->name] : '';
 
-                call_user_func($me->display_callback, $value, $me->name, $setting_group, $options);
+                call_user_func($this->display_callback, $value, $this->name, $setting_group, $options);
             };
         
         } else {
 
-            return function() use ($setting_group, $me) {
+            return function() use ($setting_group) {
                 
                 $options = get_option($setting_group);
-                $value = isset($options[$me->name]) ? $options[$me->name] : '';
+                $value = isset($options[$this->name]) ? $options[$this->name] : '';
                 
-                echo "<input id='{$setting_group}_{$me->name}' name='{$setting_group}[{$me->name}]' type='text' value='{$value}' />"; 
+                echo "<input id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' type='text' value='{$value}' />"; 
             };
         }
     }
+
+    
 }
 

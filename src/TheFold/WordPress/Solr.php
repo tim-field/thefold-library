@@ -4,22 +4,21 @@ namespace TheFold\Wordpress;
 use TheFold\Log;
 use \Solarium\Client;
 
-/*
- * Plugin Name: Solr Query 
- * Description : Use Solr instead of the DB to get posts
- * 
- */
 
-class Solr{
+class Solr {
 
  protected $hostname;
  protected $port;
  protected $path;
  protected $client;
- protected $facets = array('categories'=>'always','tags'=>'always');
+ protected $facets = ['categories'=>'always','tags'=>'always'];
  protected $last_resultset = null;
  protected $result_count = null;
  protected $per_page = null;
+ protected $update_document;
+ protected $pending_updates = [];
+ protected $pending_deletes = [];
+ protected $post_mapping = null;
 
  function __construct($path, $hostname='127.0.0.1', $port=8080)
  {
@@ -33,7 +32,7 @@ class Solr{
     $this->facets = $facets;
  }
 
- function get_posts($params=array())
+ function get_posts($params=[])
  {
      $resultset = $this->get_resultset($params);
 
@@ -50,16 +49,16 @@ class Solr{
          }
      }
 
-     return $ids ? array_map( 'get_post', $ids ) : array();
+     return $ids ? array_map( 'get_post', $ids ) : [];
  }
 
- function get_facet($name, $qparams=array())
+ function get_facet($name, $qparams=[])
  {
      $resultset = $this->get_resultset($qparams);
 
      $facets = $resultset->getFacetSet()->getFacet($name);
 
-     $return = array();
+     $return = [];
      foreach($facets as $value => $count){
          if($count) $return[$value] = $count;
      }
@@ -94,21 +93,140 @@ class Solr{
 
  function get_paging_links()
  {
-    $return = array();
+    $return = [];
     
     parse_str($_SERVER['QUERY_STRING'],$qs);
 
     $current_page = isset($qs['page']) ? $qs['page'] : 1;
 
     $qs['page'] = $current_page + 1;
-    if($this->get_result_count() > $qs['page'] * $this->per_page)
+    if ($this->get_result_count() > $qs['page'] * $this->per_page)
         $return['next'] = http_build_query($qs);
 
     $qs['page'] = $current_page -1;
-    if($qs['page'] >= 1)
+    if ($qs['page'] >= 1)
         $return['previous'] = http_build_query($qs);
 
     return str_replace('[0]','[]',$return);
+ }
+
+ public function update_post(\WP_Post $post, $mapping=null)
+ {
+    $solr_post = $this->get_update_post_document();
+
+    if (!$mapping) {
+        $mapping = $this->get_post_mapping();
+    }
+        
+    $author = get_userdata( $post->post_author );
+
+    foreach ($mapping as $solr_field => $wp_post_field) {
+        
+        if (is_string($wp_post_field)) {
+            $solr_post->addField($solr_field,$post->$wp_post_field);
+        }
+        elseif (is_callable($wp_post_field)){
+            $solr_post->addFIeld($solr_field,$wp_post_field($post, $author));
+        }
+    }
+
+    $this->pending_updates[$post->ID] = $solr_post;
+    unset($this->pending_deletes[$post->ID]);
+ }
+
+ public function delete_post(\WP_Post $post)
+ {
+    $this->pending_deletes[$post->id] = $post;
+    unset($this->pending_updates[$post->id]);
+
+    throw new Exception('not implemented yet');
+ }
+
+ public function deleteAll()
+ {
+     $update = $this->get_update_document();
+     $update->addDeleteQuery('*:*');
+     $update->addCommit();
+     
+     return $this->get_client()->update($update);
+ }
+
+ public function get_post_mapping()
+ {
+     if(!$this->post_mapping) {
+
+         $this->post_mapping = [
+             'id'=>'ID',
+             'permalink'=>function($post){
+                return get_permalink($post->ID);
+             },
+             'title'=>'post_title',
+             'content'=> function($post) {
+                return strip_tags($post->post_content);
+             },
+             'author' => function($post, $author) {
+                return $author->display_name;
+             },
+             'author_s' => function($post, $author) {
+                return get_author_posts_url($author->ID, $author->user_nicename);
+             },
+             'type' => 'post_type',
+             'date' => function($post) {
+                return $this->format_date($post->post_date_gmt);
+             },
+             'modified' => function($post) {
+                return $this->format_date($post->post_modified_gmt);
+             },
+             'categories' => function($post) {
+                $categories = get_the_category($post->ID);
+                $category_as_taxonomy = false;//todo from config
+                $values = [];
+                if ($categories) {
+                    foreach( $categories as $category ) {
+                        if ($category_as_taxonomy) {
+                            $values[] = get_category_parents($category->cat_ID, false, '^^');
+                        } else {
+                            $values[] = $category->cat_name;
+                        }
+                    }
+                }
+
+                return $values;
+             },
+             'tags' => function($post) {
+                 $tags = get_the_tags($post->ID);
+                 $values = [];
+                 if($tags) foreach($tags as $tag){
+                     $values[] = $tag->name;
+                 }    
+             }
+         ];
+     }
+            //todo filter this
+     return $this->post_mapping;
+ }
+
+ public function commit_pending()
+ {
+     $update = $this->get_update_document();
+
+     $update->addDocuments($this->pending_updates);
+
+     $update->addCommit();
+
+     $result = $this->get_client()->update($update);
+
+     //todo test result
+
+     $this->pending_updates = [];
+     $this->pending_deletes = [];
+
+     return $result;
+ }
+
+ protected function get_update_post_document()
+ {
+    return $this->get_update_document()->createDocument();
  }
 
  protected function get_resultset($params=array(), $reuse=true)
@@ -211,6 +329,15 @@ class Solr{
      return $this->client;
  }
 
+ protected function get_update_document()
+ {
+     if(!$this->update_document){
+         $this->update_document = $this->get_client()->createUpdate();
+     }
+
+     return $this->update_document;
+ }
+
  protected function get_query(){
 
      return $this->get_client()->createSelect(array('responsewriter' => 'phps'));
@@ -239,5 +366,10 @@ class Solr{
      return $field.':('.implode(' OR ',$values).')';
  }
 
+ protected function format_date($thedate){
+    $datere = '/(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2}:\d{2})/';
+    $replstr = '${1}T${2}Z';
+    return preg_replace($datere, $replstr, $thedate);
+ }
 
 }
