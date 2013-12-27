@@ -120,4 +120,27 @@ class WordPress{
 
         return $return;
     }
+
+    static public function get_custom_fields($post_type=[])
+    {
+        global $wpdb;
+
+        $where = '';
+
+        if($post_type){
+            $where = "
+                LEFT JOIN $wpdb->posts ON $wpdb->posts.ID = $wpdb->postmeta.post_id
+                WHERE $wpdb->posts.post_type IN ('".implode("','",(array) $post_type)."') ";
+        }
+        
+        $keys = $wpdb->get_col( "
+            SELECT meta_key
+            FROM $wpdb->postmeta
+            $where
+            GROUP BY meta_key
+            HAVING meta_key NOT LIKE '\_%'
+            ORDER BY meta_key" );
+
+        return $keys;
+    }
 }

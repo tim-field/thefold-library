@@ -17,7 +17,6 @@ class Solr {
  protected $per_page = null;
  protected $update_document;
  protected $pending_updates = [];
- protected $pending_deletes = [];
  protected $post_mapping = null;
 
  function __construct($path, $hostname='127.0.0.1', $port=8080)
@@ -112,34 +111,41 @@ class Solr {
 
  public function update_post(\WP_Post $post, $mapping=null)
  {
-    $solr_post = $this->get_update_post_document();
+     if($post->post_status == 'publish') {
 
-    if (!$mapping) {
-        $mapping = $this->get_post_mapping();
-    }
-        
-    $author = get_userdata( $post->post_author );
+         $solr_post = $this->get_update_post_document();
 
-    foreach ($mapping as $solr_field => $wp_post_field) {
-        
-        if (is_string($wp_post_field)) {
-            $solr_post->addField($solr_field,$post->$wp_post_field);
-        }
-        elseif (is_callable($wp_post_field)){
-            $solr_post->addFIeld($solr_field,$wp_post_field($post, $author));
-        }
-    }
+         if (!$mapping) {
+             $mapping = $this->get_post_mapping();
+         }
 
-    $this->pending_updates[$post->ID] = $solr_post;
-    unset($this->pending_deletes[$post->ID]);
+         if (!$mapping) {
+             throw new \Exception('No post mapping data. Is your filter returning ?');
+         }
+
+         $author = get_userdata( $post->post_author );
+
+         foreach ($mapping as $solr_field => $wp_post_field) {
+
+             if (is_string($wp_post_field)) {
+                 $solr_post->addField($solr_field,$post->$wp_post_field);
+             }
+             elseif (is_callable($wp_post_field)){
+                 $solr_post->addFIeld($solr_field,$wp_post_field($post, $author));
+             }
+         }
+
+         $this->pending_updates[$post->ID] = $solr_post;
+     }
  }
 
  public function delete_post(\WP_Post $post)
  {
-    $this->pending_deletes[$post->id] = $post;
-    unset($this->pending_updates[$post->id]);
+    $solr_post = $this->get_update_document();
 
-    throw new Exception('not implemented yet');
+    $solr_post->addDeleteById($post->ID);
+
+    unset($this->pending_updates[$post->ID]);
  }
 
  public function deleteAll()
@@ -201,8 +207,10 @@ class Solr {
                  }    
              }
          ];
+         
+         $this->post_mapping = apply_filters('thefold_solr_post_mapping', $this->post_mapping);
      }
-            //todo filter this
+
      return $this->post_mapping;
  }
 
@@ -216,10 +224,7 @@ class Solr {
 
      $result = $this->get_client()->update($update);
 
-     //todo test result
-
      $this->pending_updates = [];
-     $this->pending_deletes = [];
 
      return $result;
  }
@@ -366,10 +371,8 @@ class Solr {
      return $field.':('.implode(' OR ',$values).')';
  }
 
- protected function format_date($thedate){
-    $datere = '/(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2}:\d{2})/';
-    $replstr = '${1}T${2}Z';
-    return preg_replace($datere, $replstr, $thedate);
+ public static function format_date($thedate){
+    return gmdate('Y-m-d\TH:i:s\Z',strtotime($thedate)); 
  }
 
 }

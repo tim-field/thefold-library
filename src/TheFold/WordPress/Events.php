@@ -10,6 +10,12 @@ class Events
     const CPT_VENUE = 'thefold-venue';
     const CPT_SPEAKER = 'thefold-speaker';
     const CPT_SPONSOR = 'thefold-sponsor';
+    
+    const TAG_EVENT = 'thefold-event-tag';
+    const TAG_SPEAKER = 'thefold-speaker-tag';
+   
+    const CAT_EVENT = 'thefold-event-cat';
+    const CAT_SPEAKER = 'thefold-speaker-cat';
 
     const P2P_EVENT_SPEAKER = 'thefold-event-to-speaker';
     const P2P_EVENT_VENUE = 'thefold-event-to-venue';
@@ -40,6 +46,12 @@ class Events
         new CustomPostType(static::CPT_VENUE, 'Venue');
         new CustomPostType(static::CPT_SPEAKER, 'Speaker');
         new CustomPostType(static::CPT_SPONSOR, 'Sponsor');
+
+        new CustomTaxonomy(static::CAT_EVENT,'Category', static::CPT_EVENT, ['hierarchical'=>true]);
+        new CustomTaxonomy(static::TAG_EVENT,'Tag', static::CPT_EVENT);
+
+        new CustomTaxonomy(static::CAT_SPEAKER,'Category', static::CPT_SPEAKER,['hierarchical'=>true]);
+        new CustomTaxonomy(static::TAG_SPEAKER,'Tag', static::CPT_SPEAKER);
     }
 
     protected function init_acf()
