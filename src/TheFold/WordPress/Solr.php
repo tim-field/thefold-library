@@ -1,17 +1,24 @@
 <?php
 namespace TheFold\Wordpress;
 
-use TheFold\Log;
 use \Solarium\Client;
-
+use \TheFold\WordPress;
+use \TheFold\WordPress\Cache;
+use \TheFold\WordPress\ACF;
 
 class Solr {
+    
+    use Cache; 
+
+ const SETTING_NAMESPACE = 'thefold_wordpress_solr';
+ 
+ protected static $instance;
 
  protected $hostname;
  protected $port;
  protected $path;
  protected $client;
- protected $facets = ['categories'=>'always','tags'=>'always'];
+ protected $facets = ['category'=>'always','tag'=>'always'];
  protected $last_resultset = null;
  protected $result_count = null;
  protected $per_page = null;
@@ -19,11 +26,23 @@ class Solr {
  protected $pending_updates = [];
  protected $post_mapping = null;
 
- function __construct($path, $hostname='127.0.0.1', $port=8080)
+ function get_instance($path=null, $hostname=null, $port=null)
  {
-     $this->path = $path;
-     $this->hostname = $hostname;
-     $this->port = $port; 
+    if(!static::$instance){
+        static::$instance = new static($path, $hostname, $port);
+    }
+
+    return static::$instance;
+ }
+
+ function __construct($path=null, $hostname=null, $port=null)
+ {
+     $this->path = $path ?: WordPress::get_option(
+         static::SETTING_NAMESPACE,'path','/solr/');
+     $this->hostname = $hostname ?: WordPress::get_option(
+         static::SETTING_NAMESPACE,'host','127.0.0.1');
+     $this->port = $port ?: WordPress::get_option(
+         static::SETTING_NAMESPACE,'port','8080');
  }
 
  function set_facets($facets)
@@ -33,7 +52,16 @@ class Solr {
 
  function get_posts($params=[])
  {
-     $resultset = $this->get_resultset($params);
+     if(!empty($params['cache_key']))
+     {
+         $posts = $this->cache_get($params['cache_key']);
+
+         if(!is_null($posts)){
+             return $posts; 
+         }
+     }
+
+     $resultset = $this->get_resultset($params,false);
 
      $this->result_count = $resultset->getNumFound();
 
@@ -48,7 +76,13 @@ class Solr {
          }
      }
 
-     return $ids ? array_map( 'get_post', $ids ) : [];
+     $posts = $ids ? array_map( 'get_post', $ids ) : [];
+
+     if(!empty($params['cache_key'])){
+        $this->cache_set($params['cache_key'],$posts);
+     }
+
+     return $posts;
  }
 
  function get_facet($name, $qparams=[])
@@ -128,10 +162,14 @@ class Solr {
          foreach ($mapping as $solr_field => $wp_post_field) {
 
              if (is_string($wp_post_field)) {
-                 $solr_post->addField($solr_field,$post->$wp_post_field);
+                 $value = $post->$wp_post_field;
              }
              elseif (is_callable($wp_post_field)){
-                 $solr_post->addFIeld($solr_field,$wp_post_field($post, $author));
+                 $value = $wp_post_field($post, $author);
+             }
+
+             if(!is_null($value)){
+                 $solr_post->addField($solr_field,$value);
              }
          }
 
@@ -183,35 +221,90 @@ class Solr {
              'modified' => function($post) {
                 return $this->format_date($post->post_modified_gmt);
              },
-             'categories' => function($post) {
-                $categories = get_the_category($post->ID);
-                $category_as_taxonomy = false;//todo from config
-                $values = [];
-                if ($categories) {
-                    foreach( $categories as $category ) {
-                        if ($category_as_taxonomy) {
-                            $values[] = get_category_parents($category->cat_ID, false, '^^');
-                        } else {
-                            $values[] = $category->cat_name;
-                        }
-                    }
-                }
-
-                return $values;
-             },
-             'tags' => function($post) {
-                 $tags = get_the_tags($post->ID);
-                 $values = [];
-                 if($tags) foreach($tags as $tag){
-                     $values[] = $tag->name;
-                 }    
-             }
          ];
-         
+
+         $this->post_mapping = $this->map_taxonomies($this->map_custom_fields($this->post_mapping));
+
          $this->post_mapping = apply_filters('thefold_solr_post_mapping', $this->post_mapping);
      }
 
      return $this->post_mapping;
+ }
+
+ protected function map_custom_fields($post_mapping)
+ {
+    $custom_fields = WordPress::get_option(static::SETTING_NAMESPACE,'custom_fields');
+    
+    foreach($custom_fields as $field) {
+
+        $is_date = false;
+        $type = 's';
+
+        if($meta = ACF::get_field_meta($field)){
+
+            switch($meta['type']){
+
+            case 'text':
+                $type = 't';
+                break;
+            case 'date_time_picker':
+                $type = 'dt'; 
+                $is_date = true;
+                break;
+            }
+        }
+
+        $post_mapping["{$field}_{$type}"] = function($post) use ($field, $is_date){
+            
+            $value = get_post_meta($post->ID,$field,true);
+
+            if($is_date && $value){
+                $value = gmdate('Y-m-d\TH:i:s\Z',(int) $value); 
+            }
+
+            return $value ?: null;
+        };
+    }
+
+    return $post_mapping;
+ }
+
+ protected function map_taxonomies($post_mapping)
+ {
+    $taxonomies = WordPress::get_option(static::SETTING_NAMESPACE,'taxonomies');
+
+    foreach($taxonomies as $name) {
+
+        $taxonomie = get_taxonomy($name);
+
+        $schema_name = $taxonomie->name;
+
+        if(!$taxonomie->_builtin){
+            $schema_name .= '_srch';
+        }
+
+        $category_as_taxonomy = ($taxonomie->name == 'category' && Wordpress::get_option(static::SETTING_NAMESPACE,'category_as_taxonomy',1));
+
+        $post_mapping[$schema_name] = function($post) use ($taxonomie, $category_as_taxonomy) {
+
+            $names = null;
+
+            if ($terms = get_the_terms($post,$taxonomie->name))
+            {
+                $names = [];
+
+                foreach($terms as $term) {
+                    $names[] = ($category_as_taxonomy) ? 
+                        get_category_parents((int)$term->term_id, false, '^^') : 
+                        $term->name;
+                }
+            }
+
+            return $names;
+        };
+    }
+
+    return $post_mapping;
  }
 
  public function commit_pending()
@@ -234,7 +327,7 @@ class Solr {
     return $this->get_update_document()->createDocument();
  }
 
- protected function get_resultset($params=array(), $reuse=true)
+ protected function get_resultset($params=[], $reuse=true)
  {
      if(!$this->last_resultset || !$reuse){
          $this->last_resultset = $this->exec_query($this->build_query($params));
@@ -259,16 +352,26 @@ class Solr {
 
      $query->setFields(array('id'));
 
+     if(isset($params['query'])){
+        $query->setQuery($params['query']);
+     }
+
      if(isset($params['date_range'])) {
 
-         $from_date = (isset($params['date_range']['from_date'])) ? date('c',strtotime($params['date_range']['from_date'])).'Z/DAY' : 'NOW/DAY';
-         $to_date = (isset($params['date_range']['to_date'])) ? date('c',strtotime($params['date_range']['to_date'])).'Z/DAY' : 'NOW/DAY+3DAY';
-         $query->createFilterQuery('daterange')->setQuery("date:[$from_date TO $to_date]");
+         $days_out = isset($params['date_range']['days_out']) ? $params['date_range']['days_out'] : 1;
+
+         $from_date = isset($params['date_range']['from_date']) ? date('c',strtotime($params['date_range']['from_date'])).'Z/DAY' : 'NOW/DAY';
+
+         $to_date = isset($params['date_range']['to_date']) ? date('c',strtotime($params['date_range']['to_date'])).'Z/DAY' : "{$from_date}+{$days_out}DAY";
+
+         $date_field = isset($params['date_range']['date_field']) ? $params['date_range']['date_field'] : 'date';
+
+         $query->createFilterQuery('daterange')->setQuery("$date_field:[$from_date TO $to_date]");
      }
 
      //need an array here !
      if(isset($params['post_types'])) {
-         $query->createFilterQuery('posttype')->setQuery('type:('.implode(' OR ',$params['post_types']).')');
+         $query->createFilterQuery('posttype')->setQuery('type:('.implode(' OR ',(array) $params['post_types']).')');
      }
 
      if(isset($params['fields'])) {
@@ -278,42 +381,44 @@ class Solr {
          }
      }
 
-     foreach($this->facets(true) as $facet => $tag){
+     foreach($this->facets(true) as $facet => $tag) {
 
-         if(!empty($params['facets'][$facet])){
+         if(!empty($params['facets'][$facet])) {
 
-             $query->addFilterQuery(array(
+             $query->addFilterQuery([
                  'field'=>$facet,
                  'key'=>$facet,
                  'query'=> $this->create_query_string($facet, $params['facets'][$facet]),
                  'tag' => $tag,
-             ));
+             ]);
          }
      }
 
-     if($facets = $this->facets(true)) {
+     if( !empty($params['with_facets']) && $facets = $this->facets(true)) {
 
          $facetSet = $query->getFacetSet();
 
          foreach($facets as $field => $tag) {
-             $facetSet->createFacetField(array(
+
+             $facetSet->createFacetField([
                  'field'=>$field,
                  'key'=>$field,
-                 'exclude'=>'user')
-             );
+                 'exclude'=>'user'
+                 ]);
          }
      }
 
+     $sort = 'date';
+     $sort_type = $query::SORT_DESC;
+
      if(isset($params['sort'])) {
-         list($sort, $type) = $params['sort'];
+         list($sort, $sort_type) = $params['sort'];
      }
-     else {
-         $query->addSort('date', $query::SORT_DESC);
-     }
+
+     $query->addSort($sort, $sort_type);
 
      if(!$params['nopaging']) {
          $query->setStart( ($params['page']-1) * $params['per_page'] )->setRows($params['per_page']);
-         Log::add(($params['page']-1) * $params['per_page']);
      }
 
      return $query;
@@ -345,7 +450,7 @@ class Solr {
 
  protected function get_query(){
 
-     return $this->get_client()->createSelect(array('responsewriter' => 'phps'));
+     return $this->get_client()->createSelect(['responsewriter' => 'phps']);
  }
 
  protected function exec_query($query){
@@ -355,15 +460,15 @@ class Solr {
 
  protected function get_config() {
 
-     return array(
-         'endpoint' => array(
-             'localhost' => array(
+     return [
+         'endpoint' => [
+             'localhost' => [
                  'hostname' => $this->hostname,
                  'port'     => $this->port,
                  'path' =>  $this->path
-             )
-         )
-     );
+             ]
+         ]
+     ];
  }
 
  protected function create_query_string($field,$value){

@@ -25,7 +25,12 @@ abstract class QuickConfig
     }
 
     protected function default_plural(){
-        return $this->name.'s';
+
+        $name = $this->name;
+
+        $last = substr($name,-1);
+
+        return $last == 'y' ? substr($name,0,-1).'ies' : $name.'s';
     }
     
     protected function default_slug(){

@@ -21,7 +21,7 @@ class Events
     const P2P_EVENT_VENUE = 'thefold-event-to-venue';
     const P2P_EVENT_SPONSOR = 'thefold-event-to-sponsor';
 
-    public static function get_instance()
+    public static function init()
     {
         if(!static::$instance){
             static::$instance = new static();

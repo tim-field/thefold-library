@@ -3,13 +3,6 @@ namespace TheFold;
 
 class WordPress{
     
-
-    static function render_view($view, $view_params=array(),$dir)
-    {
-        extract($view_params);
-        include $dir .'/views/'.$view;
-    }
-
     static function render_template($slug, $name = null, $view_params=array(), $return=false)
     {
         if($view_params)
@@ -29,6 +22,17 @@ class WordPress{
             return ob_get_clean();
     }
 
+   /**
+    * @deprecated
+    *
+    * render_template is better most of the time
+    **/ 
+    static function render_view($view, $view_params=array(),$dir)
+    {
+        extract($view_params);
+        include $dir .'/views/'.$view;
+    }
+
 
 /*
  *
@@ -43,16 +47,12 @@ class WordPress{
 
     static function init_url_access($url_callbacks){
 
-        $query_var_name = function($rewrite) {
-            return preg_replace('/\W/','',$rewrite);
-        };
-
-        \add_filter('rewrite_rules_array',function($rules) use ($url_callbacks, $query_var_name) {
+        \add_filter('rewrite_rules_array',function($rules) use ($url_callbacks) {
 
             global $wp_rewrite;
 
             foreach(array_keys($url_callbacks) as $look_for_in_url) {
-                $newRule = array('^'.trim($look_for_in_url,'/').'/?$' => 'index.php?'.$query_var_name($look_for_in_url).'=1');
+                $newRule = array('^'.trim($look_for_in_url,'/').'/?$' => 'index.php?'.static::query_var_name($look_for_in_url).'=1');
 
                 $rules = $newRule + $rules;
             }
@@ -60,25 +60,30 @@ class WordPress{
             return $rules;
         });
 
-        \add_filter('query_vars',function($qvars) use ($url_callbacks, $query_var_name) {
+        \add_filter('query_vars',function($qvars) use ($url_callbacks) {
             
             foreach(array_keys($url_callbacks) as $look_for_in_url) {
                 
-                $var = $query_var_name($look_for_in_url);
+                $var = static::query_var_name($look_for_in_url);
                 $qvars[] = $var; 
             }
             return $qvars;
         });
         
-        \add_action( 'template_redirect', function() use ($url_callbacks, $query_var_name) {
+        \add_action( 'template_redirect', function() use ($url_callbacks) {
 
             global $wp_query;
 
             foreach($url_callbacks as $url_key => $callback) {
 
-                if ( $wp_query->get( $query_var_name($url_key) ) ){
+                if ( $wp_query->get( static::query_var_name($url_key) ) ){
 
-                    $callback( $_SERVER['REQUEST_URI'] );
+                    $params = null;
+
+                    preg_match('#'.trim($url_key,'/').'#',$_SERVER['REQUEST_URI'],$params);
+
+                    call_user_func_array($callback,$params);
+
                     exit();
                 }
             }
@@ -88,6 +93,16 @@ class WordPress{
             global $wp_rewrite;
             $wp_rewrite->flush_rules();
         });
+    }
+
+    static protected function query_var_name($rewrite) {
+       static $cache;
+
+       if(!isset($cache[$rewrite])){
+           $cache[$rewrite] = md5($rewrite);// preg_replace('/\W/','',$rewrite);
+       }
+
+       return $cache[$rewrite]; 
     }
    
 
@@ -109,7 +124,7 @@ class WordPress{
         return $user_roles ? array_shift($user_roles) : null;
     }
     
-    static public function get_option($namespace,$key=null)
+    static public function get_option($namespace,$key=null,$default=null)
     {
         $options = get_option($namespace);
 
@@ -118,7 +133,7 @@ class WordPress{
         else
             $return = $options;
 
-        return $return;
+        return $return ?: $default;
     }
 
     static public function get_custom_fields($post_type=[])
@@ -142,5 +157,12 @@ class WordPress{
             ORDER BY meta_key" );
 
         return $keys;
+    }
+
+    static function send_404()
+    {
+        global $wp_query;
+        status_header('404');
+        $wp_query->set_404();
     }
 }
