@@ -26,7 +26,7 @@ class Solr {
  protected $pending_updates = [];
  protected $post_mapping = null;
 
- function get_instance($path=null, $hostname=null, $port=null)
+ static function get_instance($path=null, $hostname=null, $port=null)
  {
     if(!static::$instance){
         static::$instance = new static($path, $hostname, $port);
