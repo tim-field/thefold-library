@@ -65,7 +65,7 @@ class CustomPostType extends QuickConfig
                 'public' => true,
                 'rewrite' => array('slug' => $me->slug, 'with_front' => $me->rewrite_with_front ),
                 'menu_position' => $me->menu_position,
-                'menu_icon' => $me->menu_icon ? \get_stylesheet_directory_uri() . $me->menu_icon : null,
+                'menu_icon' => $me->menu_icon,
                 'hierarchical' => $me->hierarchical,
                 'supports'=> $me->supports,
                 'taxonomies' => $me->taxonomies
