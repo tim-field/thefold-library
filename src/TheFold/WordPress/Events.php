@@ -20,6 +20,7 @@ class Events
     const P2P_EVENT_SPEAKER = 'thefold-event-to-speaker';
     const P2P_EVENT_VENUE = 'thefold-event-to-venue';
     const P2P_EVENT_SPONSOR = 'thefold-event-to-sponsor';
+    const P2P_RELATED_EVENTS = 'thefold-related-events';
 
     public static function init()
     {
@@ -28,6 +29,16 @@ class Events
         }
 
         return static::$instance;
+    }
+
+    public static function get_venues(\WP_Post $event)
+    {
+        return get_posts( array(
+          'connected_type' => static::P2P_EVENT_VENUE,
+          'connected_items' => $event,
+          'nopaging' => true,
+          'suppress_filters' => false
+        ));
     }
 
     protected function __construct()
@@ -71,22 +82,33 @@ class Events
 
     protected function init_p2p()
     {
-        \p2p_register_connection_type([ 
+        p2p_register_connection_type([ 
             'name' => static::P2P_EVENT_SPEAKER,
             'from' => static::CPT_EVENT,
             'to' => static::CPT_SPEAKER
             ]);
         
-        \p2p_register_connection_type([ 
+        p2p_register_connection_type([ 
             'name' => static::P2P_EVENT_VENUE,
             'from' => static::CPT_EVENT,
             'to' => static::CPT_VENUE
         ]);
 
-        \p2p_register_connection_type([ 
+        p2p_register_connection_type([ 
             'name' => static::P2P_EVENT_SPONSOR,
             'from' => static::CPT_EVENT,
             'to' => static::CPT_SPONSOR
+        ]);
+        
+        p2p_register_connection_type([
+            'name' => static::P2P_RELATED_EVENTS,
+            'from' => static::CPT_EVENT,
+            'to' => static::CPT_EVENT,
+            'reciprocal' => true,
+            'title' => [
+                'from'=>'Related Events',
+                'to'=>'Related Events',
+            ]
         ]);
     }
 }

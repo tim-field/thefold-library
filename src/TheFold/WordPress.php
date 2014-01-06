@@ -47,7 +47,7 @@ class WordPress{
 
     static function init_url_access($url_callbacks){
 
-        \add_filter('rewrite_rules_array',function($rules) use ($url_callbacks) {
+        add_filter('rewrite_rules_array',function($rules) use ($url_callbacks) {
 
             global $wp_rewrite;
 
@@ -60,7 +60,7 @@ class WordPress{
             return $rules;
         });
 
-        \add_filter('query_vars',function($qvars) use ($url_callbacks) {
+        add_filter('query_vars',function($qvars) use ($url_callbacks) {
             
             foreach(array_keys($url_callbacks) as $look_for_in_url) {
                 
@@ -70,7 +70,7 @@ class WordPress{
             return $qvars;
         });
         
-        \add_action( 'template_redirect', function() use ($url_callbacks) {
+        add_action( 'template_redirect', function() use ($url_callbacks) {
 
             global $wp_query;
 
@@ -89,10 +89,11 @@ class WordPress{
             }
         },0);
 
-        \add_filter('admin_init', function(){
+        /* I think this is too heavy, should be done manually only
+         * \add_filter('admin_init', function(){
             global $wp_rewrite;
             $wp_rewrite->flush_rules();
-        });
+        });*/
     }
 
     static protected function query_var_name($rewrite) {

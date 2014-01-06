@@ -28,7 +28,7 @@ class Solr
 
         $events = $solr->get_posts([
             'post_types' => Events::CPT_EVENT,
-            'fields'=>['speakers_s' => $speaker->post_name],
+            'fields'=>['speakers_i' => $speaker->ID],
             'sort' => ['starts_at_dt','desc'],
             'cache_key' => $cache ? __CLASS__.':'.__FUNCTION__.':'.$speaker->ID : null
             ]);
@@ -42,7 +42,7 @@ class Solr
         
         $speakers = $solr->get_posts([
             'post_types' => Events::CPT_SPEAKER,
-            'fields'=>['events_s' => $event->post_name],
+            'fields'=>['events_i' => $event->ID],
             'sort' => ['starts_at_dt','desc'],
             'cache_key' => $cache ? __CLASS__.':'.__FUNCTION__.':'.$event->ID : null
             ]);
@@ -50,11 +50,24 @@ class Solr
        return $speakers;
     }
 
+    public static function related_events(\WP_Post $event)
+    {
+        $solr = SolrService::get_instance();
+
+        $events = $solr->get_posts([
+            'post_types' => Events::CPT_EVENT,
+            'fields'=>['related_events_i' => $event->ID],
+            'sort' => ['starts_at_dt','desc'],
+            ]);
+
+       return $events;
+    }
+
     protected function index_p2p_relations()
     {
         add_filter('thefold_solr_post_mapping',function($post_mapping){
 
-            $post_mapping['speakers_s'] = function($event){
+            $post_mapping['speakers_i'] = function($event){
 
                 $speakers = null;
 
@@ -64,20 +77,20 @@ class Solr
 
                     $speakers_posts = get_posts( array(
                         'connected_type' => Events::P2P_EVENT_SPEAKER,
-                        'connected_items' => $event,
+                        'connected_items' => $event->ID,
                         'nopaging' => true,
                         'suppress_filters' => false
                     ));
 
                     foreach($speakers_posts as $speaker){
-                        $speakers[] = $speaker->post_name;
+                        $speakers[] = $speaker->ID;
                     }
                 }
 
                 return $speakers;
             };
             
-            $post_mapping['events_s'] = function($speaker){
+            $post_mapping['events_i'] = function($speaker){
 
                 $events = null;
 
@@ -87,17 +100,40 @@ class Solr
 
                     $event_posts = get_posts( array(
                         'connected_type' => Events::P2P_EVENT_SPEAKER,
-                        'connected_items' => $speaker,
+                        'connected_items' => $speaker->ID,
                         'nopaging' => true,
                         'suppress_filters' => false
                     ));
 
                     foreach($event_posts as $event){
-                        $events[] = $event->post_name;
+                        $events[] = $event->ID;
                     }
                 }
 
                 return $events;
+            };
+            
+            $post_mapping['related_events_i'] = function($event){
+
+                $related_events = null;
+
+                if($event->post_type == Events::CPT_EVENT){
+
+                    $related_events = [];
+
+                    $event_posts = get_posts( array(
+                        'connected_type' => Events::P2P_RELATED_EVENTS,
+                        'connected_items' => $event->ID,
+                        'nopaging' => true,
+                        'suppress_filters' => false
+                    ));
+
+                    foreach($event_posts as $related_event){
+                        $related_events[] = $related_event->ID;
+                    }
+                }
+
+                return $related_events;
             };
 
             return $post_mapping;

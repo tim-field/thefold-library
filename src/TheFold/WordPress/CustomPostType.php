@@ -38,40 +38,37 @@ class CustomPostType extends QuickConfig
 
     protected function setup_post_type()
     {
-        $me = $this; //until php 5.4
-
-        \add_action( 'init', function() use ($me) {
-
+        \add_action( 'init', function() {
             
             /**
              * Properties of $me are pulled from the $info array passed
              * to constructor. If they don't exist we look for a default_{property} method
              */
             
-            $plural = $me->plural;
+            $plural = $this->plural;
             
-            \register_post_type( $me->type, array(
+            \register_post_type( $this->type, array(
                 'label' => $plural,
                 'labels' => array( 
                     'name' => $plural,
-                    'singular_name' => $me->name,
-                    'add_new_item' => 'Add New '.$me->name,
-                    'edit_item' => 'Edit '.$me->name,
-                    'new_item' => 'New '.$me->name,
-                    'view_item' => 'View '.$me->name,
+                    'singular_name' => $this->name,
+                    'add_new_item' => 'Add New '.$this->name,
+                    'edit_item' => 'Edit '.$this->name,
+                    'new_item' => 'New '.$this->name,
+                    'view_item' => 'View '.$this->name,
                     'search_items' => 'Search '.$plural,
-                    'parent_item_colon' => 'Parent '.$me->name
+                    'parent_item_colon' => 'Parent '.$this->name
                 ),
                 'public' => true,
-                'rewrite' => array('slug' => $me->slug, 'with_front' => $me->rewrite_with_front ),
-                'menu_position' => $me->menu_position,
-                'menu_icon' => $me->menu_icon,
-                'hierarchical' => $me->hierarchical,
-                'supports'=> $me->supports,
-                'taxonomies' => $me->taxonomies
+                'rewrite' => array('slug' => $this->slug, 'with_front' => $this->rewrite_with_front ),
+                'menu_position' => $this->menu_position,
+                'menu_icon' => $this->menu_icon,
+                'hierarchical' => $this->hierarchical,
+                'supports'=> $this->supports,
+                'taxonomies' => $this->taxonomies
             ));
 
-        },9999);
+        },99);
     }
 }
 
