@@ -53,10 +53,10 @@ class Events
 
     protected function init_cpt()
     {
-        new CustomPostType(static::CPT_EVENT, 'Event');
-        new CustomPostType(static::CPT_VENUE, 'Venue');
-        new CustomPostType(static::CPT_SPEAKER, 'Speaker');
-        new CustomPostType(static::CPT_SPONSOR, 'Sponsor');
+        new CustomPostType(static::CPT_EVENT, 'Event', ['menu_icon'=>'dashicons-calendar']);
+        new CustomPostType(static::CPT_VENUE, 'Venue', ['menu_icon'=>'dashicons-location-alt']);
+        new CustomPostType(static::CPT_SPEAKER, 'Speaker', ['menu_icon'=>'dashicons-groups']);
+        new CustomPostType(static::CPT_SPONSOR, 'Sponsor', ['menu_icon'=>'dashicons-star-filled']);
 
         new CustomTaxonomy(static::CAT_EVENT,'Category', static::CPT_EVENT, ['hierarchical'=>true]);
         new CustomTaxonomy(static::TAG_EVENT,'Tag', static::CPT_EVENT);
