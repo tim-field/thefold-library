@@ -251,6 +251,9 @@ class Solr {
             case 'text':
                 $type = 't';
                 break;
+            case 'true_false':
+                $type = 'b';
+                break;
             case 'date_time_picker':
                 $type = 'dt'; 
                 $is_date = true;
