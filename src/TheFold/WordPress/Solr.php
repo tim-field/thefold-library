@@ -289,6 +289,7 @@ class Solr {
 
         $category_as_taxonomy = ($taxonomie->name == 'category' && Wordpress::get_option(static::SETTING_NAMESPACE,'category_as_taxonomy',1));
 
+        // Index category and tag names
         $post_mapping[$schema_name] = function($post) use ($taxonomie, $category_as_taxonomy) {
 
             $names = null;
@@ -301,6 +302,23 @@ class Solr {
                     $names[] = ($category_as_taxonomy) ? 
                         get_category_parents((int)$term->term_id, false, '^^') : 
                         $term->name;
+                }
+            }
+
+            return $names;
+        };
+        
+        // Index category and tag id's
+        $post_mapping[$taxonomie->name.'_taxonomy'] = function($post) use ($taxonomie) {
+
+            $names = null;
+
+            if ($terms = get_the_terms($post,$taxonomie->name))
+            {
+                $names = [];
+
+                foreach($terms as $term) {
+                    $names[] = $term->term_id;
                 }
             }
 
@@ -425,7 +443,10 @@ class Solr {
          $query->addSort($sort, $sort_type);
      }
 
-     if(!$params['nopaging']) {
+     if(isset($params['rows'])){
+         $query->setRows($params['rows']);
+     }
+     elseif(!$params['nopaging']) {
          $query->setStart( ($params['page']-1) * $params['per_page'] )->setRows($params['per_page']);
      }
 
