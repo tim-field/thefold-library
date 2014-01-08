@@ -85,9 +85,9 @@ class Solr {
      return $posts;
  }
 
- function get_facet($name, $qparams=[])
+ function get_facet($name, $qparams=null, $reuse=true)
  {
-     $resultset = $this->get_resultset($qparams);
+     $resultset = $this->get_resultset($qparams, $reuse);
 
      $facets = $resultset->getFacetSet()->getFacet($name);
 
@@ -101,14 +101,18 @@ class Solr {
      return $return;
  }
 
- function get_facets($qparams){
-
+ function get_facets($qparams=null)
+ {
+     if($qparams){
+           $this->last_resultset = null; 
+     }
+     
      $facets = $this->facets();
 
      $return = array();
      foreach($facets as $facet){
 
-         if($values = $this->get_facet($facet)){
+         if($values = $this->get_facet($facet,$qparams,true)){
             
             $return[$facet] = $values; 
          }
@@ -369,7 +373,6 @@ class Solr {
          $query->createFilterQuery('daterange')->setQuery("$date_field:[$from_date TO $to_date]");
      }
 
-     //need an array here !
      if(isset($params['post_types'])) {
          $query->createFilterQuery('posttype')->setQuery('type:('.implode(' OR ',(array) $params['post_types']).')');
      }
@@ -408,14 +411,19 @@ class Solr {
          }
      }
 
-     $sort = 'date';
-     $sort_type = $query::SORT_DESC;
 
      if(isset($params['sort'])) {
          list($sort, $sort_type) = $params['sort'];
      }
+     elseif(!isset($params['query'])) {
+         //if not a search query, default to post date sort
+         $sort = 'date';
+         $sort_type = $query::SORT_DESC;
+     }
 
-     $query->addSort($sort, $sort_type);
+     if($sort && $sort_type) {
+         $query->addSort($sort, $sort_type);
+     }
 
      if(!$params['nopaging']) {
          $query->setStart( ($params['page']-1) * $params['per_page'] )->setRows($params['per_page']);
@@ -477,7 +485,7 @@ class Solr {
  }
 
  public static function format_date($thedate){
-    return gmdate('Y-m-d\TH:i:s\Z',strtotime($thedate)); 
+    return gmdate('Y-m-d\TH:i:s\Z', is_numeric($thedate) ? $thedate : strtotime($thedate)); 
  }
 
 }
