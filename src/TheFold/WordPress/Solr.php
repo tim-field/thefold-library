@@ -432,18 +432,26 @@ class Solr {
          }
      }
 
+     $sorts = [];
 
-     if(isset($params['sort'])) {
+     if(isset($params['sorts'])) {
+
+         $sorts = $params['sorts'];
+     }
+     elseif(isset($params['sort'])) {
+
          list($sort, $sort_type) = $params['sort'];
+
+         $sorts[$sort] = strtolower($sort_type);
      }
      elseif(!isset($params['query'])) {
          //if not a search query, default to post date sort
-         $sort = 'date';
-         $sort_type = $query::SORT_DESC;
+
+         $sorts['date'] = $query::SORT_DESC;
      }
 
-     if($sort && $sort_type) {
-         $query->addSort($sort, $sort_type);
+     if($sorts) {
+         $query->addSorts($sorts);
      }
 
      if(isset($params['rows'])){

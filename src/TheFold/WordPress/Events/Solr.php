@@ -36,31 +36,38 @@ class Solr
        return $events;
     }
 
-    public static function speakers_by_event(\WP_Post $event, $cache = true)
+    public static function speakers_by_event(\WP_Post $event, $params=[])
     {
-        $solr = SolrService::get_instance();
-        
-        $speakers = $solr->get_posts([
+        $default_params = [
             'post_types' => Events::CPT_SPEAKER,
             'fields'=>['events_i' => $event->ID],
             'sort' => ['starts_at_dt','desc'],
             'cache_key' => $cache ? __CLASS__.':'.__FUNCTION__.':'.$event->ID : null
-            ]);
+            ];
 
-       return $speakers;
+       return SolrService::get_instance()->get_posts(array_merge($default_params, $params));
     }
 
-    public static function related_events(\WP_Post $event)
+    public static function events_by_category($category_id,$params=[])
     {
-        $solr = SolrService::get_instance();
+        $default_params = [
+            'post_types'=>Events::CPT_EVENT,
+            'fields'=>[Events::CAT_EVENT.'_taxonomy'=>$category_id],
+            'sort' => ['starts_at_dt','desc']
+            ];
 
-        $events = $solr->get_posts([
+        return SolrService::get_instance()->get_posts(array_merge($default_params, $params));
+    }
+
+    public static function related_events(\WP_Post $event,$params=[])
+    {
+        $default_params = [
             'post_types' => Events::CPT_EVENT,
             'fields'=>['related_events_i' => $event->ID],
-            'sort' => ['starts_at_dt','desc'],
-            ]);
+            'sort' => ['starts_at_dt','desc']
+            ];
 
-       return $events;
+       return SolrService::get_instance()->get_posts(array_merge($default_params, $params));
     }
 
     protected function index_p2p_relations()
