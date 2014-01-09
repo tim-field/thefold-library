@@ -82,9 +82,13 @@ class WordPress{
 
                     preg_match('#'.trim($url_key,'/').'#',$_SERVER['REQUEST_URI'],$params);
 
-                    call_user_func_array($callback,$params);
+                    $res = call_user_func_array($callback,$params);
 
-                    exit();
+                    if($res === false)
+                        static::send_404();
+                    else{
+                        exit();
+                    }
                 }
             }
         },0);
