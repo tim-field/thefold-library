@@ -22,25 +22,22 @@ class Solr
         $this->index_p2p_relations();
     }
 
-    public static function events_by_speaker(\WP_Post $speaker, $cache=true)
+    public static function events_by_speaker(\WP_Post $speaker, $params=[])
     {
-        $solr = SolrService::get_instance();
-
-        $events = $solr->get_posts([
+        $default_params = [
             'post_types' => Events::CPT_EVENT,
-            'fields'=>['speakers_i' => $speaker->ID],
+            'fields'=>['speakers_p2p' => $speaker->ID],
             'sort' => ['starts_at_dt','desc'],
-            'cache_key' => $cache ? __CLASS__.':'.__FUNCTION__.':'.$speaker->ID : null
-            ]);
+            ];
 
-       return $events;
+       return SolrService::get_instance()->get_posts(array_merge($default_params,$params));
     }
 
     public static function speakers_by_event(\WP_Post $event, $params=[])
     {
         $default_params = [
             'post_types' => Events::CPT_SPEAKER,
-            'fields'=>['events_i' => $event->ID],
+            'fields'=>['events_p2p' => $event->ID],
             'sort' => ['starts_at_dt','desc'],
             'cache_key' => $cache ? __CLASS__.':'.__FUNCTION__.':'.$event->ID : null
             ];
@@ -63,7 +60,7 @@ class Solr
     {
         $default_params = [
             'post_types' => Events::CPT_EVENT,
-            'fields'=>['related_events_i' => $event->ID],
+            'fields'=>['related_events_p2p' => $event->ID],
             'sort' => ['starts_at_dt','desc']
             ];
 
@@ -74,7 +71,7 @@ class Solr
     {
         add_filter('thefold_solr_post_mapping',function($post_mapping){
 
-            $post_mapping['speakers_i'] = function($event){
+            $post_mapping['speakers_p2p'] = function($event){
 
                 $speakers = null;
 
@@ -97,7 +94,7 @@ class Solr
                 return $speakers;
             };
             
-            $post_mapping['events_i'] = function($speaker){
+            $post_mapping['events_p2p'] = function($speaker){
 
                 $events = null;
 
@@ -120,7 +117,7 @@ class Solr
                 return $events;
             };
             
-            $post_mapping['related_events_i'] = function($event){
+            $post_mapping['related_events_p2p'] = function($event){
 
                 $related_events = null;
 
