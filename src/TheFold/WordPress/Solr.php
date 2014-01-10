@@ -128,23 +128,49 @@ class Solr {
      return $this->result_count;
  }
 
- function get_paging_links()
+ function get_paging_links(callable $format_function=null)
  {
+     if(!$format_function){
+         $format_function = function($url,$page,$qs){
+             $qs['page'] = $page;
+             return $url.'?'.http_build_query($qs);
+         };
+     }
+
     $return = [];
     
     parse_str($_SERVER['QUERY_STRING'],$qs);
 
+           //fixes array values in get strings
+    $qs = str_replace('[0]','[]',$qs);
+
+    $url = $_SERVER['REQUEST_URI'];
+
+    if($pos = strpos($url,'?')){
+        $url = substr($url,0,$pos);
+    }
+
     $current_page = isset($qs['page']) ? $qs['page'] : 1;
+    $total_pages = ceil($this->get_result_count() / $this->per_page);
 
-    $qs['page'] = $current_page + 1;
-    if ($this->get_result_count() > $qs['page'] * $this->per_page)
-        $return['next'] = http_build_query($qs);
+    if($total_pages > 1){
 
-    $qs['page'] = $current_page -1;
-    if ($qs['page'] >= 1)
-        $return['previous'] = http_build_query($qs);
+        if ($previous = $current_page -1) {
+            $return['previous'] = $format_function($url,$previous,$qs);
+        }
 
-    return str_replace('[0]','[]',$return);
+        for($i = max(1,$current_page-5); $i <= min($total_pages,$current_page+5); $i++) {
+            $return["$i"] = $format_function($url,$i,$qs);
+        }
+
+        $next_page = $current_page + 1;
+
+        if ($next_page < $total_pages){
+            $return['next'] = $format_function($url,$next_page,$qs);
+        }
+    }
+    
+    return $return;
  }
 
  public function update_post(\WP_Post $post, $mapping=null)
