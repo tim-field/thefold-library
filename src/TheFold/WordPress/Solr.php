@@ -265,7 +265,7 @@ class Solr {
  {
     $custom_fields = WordPress::get_option(static::SETTING_NAMESPACE,'custom_fields');
     
-    foreach($custom_fields as $field) {
+    if($custom_fields) foreach($custom_fields as $field) {
 
         $is_date = false;
         $type = 's';
@@ -380,7 +380,7 @@ class Solr {
 
  protected function get_resultset($params=[], $reuse=true)
  {
-     if(!$this->last_resultset || !$reuse){
+     if((!$this->last_resultset || !$reuse) && $params) {
          $this->last_resultset = $this->exec_query($this->build_query($params));
      }
 
