@@ -170,4 +170,9 @@ class WordPress{
         status_header('404');
         $wp_query->set_404();
     }
+
+    static function get_post_content($post_id)
+    {
+        return apply_filters('the_content', get_post_field('post_content', $post_id));
+    }
 }
