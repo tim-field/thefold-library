@@ -203,7 +203,7 @@ class Solr {
              }
          }
 
-         $this->pending_updates[$post->ID] = $solr_post;
+         $this->pending_updates[$post->ID] = apply_filters('thefold_solr_update_post', $solr_post, $post);
      }
  }
 
@@ -239,7 +239,7 @@ class Solr {
                 return strip_tags($post->post_content);
              },
              'author' => function($post, $author) {
-                return $author->display_name;
+                return $author->user_nicename;
              },
              'author_s' => function($post, $author) {
                 return get_author_posts_url($author->ID, $author->user_nicename);
@@ -252,7 +252,7 @@ class Solr {
                 return $this->format_date($post->post_modified_gmt);
              },
          ];
-
+            
          $this->post_mapping = $this->map_taxonomies($this->map_custom_fields($this->post_mapping));
 
          $this->post_mapping = apply_filters('thefold_solr_post_mapping', $this->post_mapping);
@@ -402,6 +402,11 @@ class Solr {
      $query = $this->get_query();
 
      $query->setFields(array('id'));
+
+     if(isset($params['boost'])){
+         $dismax = $query->getDisMax();
+         $dismax->setBoostQuery($params['boost']);
+     }
 
      if(isset($params['query'])){
         $query->setQuery($params['query']);
