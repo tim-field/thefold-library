@@ -544,7 +544,14 @@ class Solr {
 
  protected function create_query_string($field,$value){
      $values = array_map('urldecode', (array) $value);
-     return $field.':('.implode(' OR ',$values).')';
+     $condition = 'OR';
+
+     //If this is an exclude field it makes sense to change this to an 'AND' statement. 
+     if($field{0} == '-'){
+        $condition = 'AND';
+     }
+
+     return $field.':('.implode(" $condition ",$values).')';
  }
 
  public static function format_date($thedate){
