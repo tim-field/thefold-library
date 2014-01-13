@@ -544,9 +544,8 @@ class Solr {
 
  protected function create_query_string($field,$value){
      $values = array_map('urldecode', (array) $value);
-     $condition = 'OR';
 
-     return $field.':("'.implode('" OR "', $values).'")';
+     return $field.':("'.implode('" "', $values).'")';
  }
 
  public static function format_date($thedate){
