@@ -546,12 +546,7 @@ class Solr {
      $values = array_map('urldecode', (array) $value);
      $condition = 'OR';
 
-     //If this is an exclude field it makes sense to change this to an 'AND' statement. 
-     if($field{0} == '-'){
-        $condition = 'AND';
-     }
-
-     return $field.':('.implode(" $condition ",$values).')';
+     return $field.':("'.implode('" OR "', $values).'")';
  }
 
  public static function format_date($thedate){
