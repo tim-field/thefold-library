@@ -78,6 +78,8 @@ class WordPress{
 
                 if ( $wp_query->get( static::query_var_name($url_key) ) ){
 
+                    $wp_query->is_home = false;
+
                     $params = null;
 
                     preg_match('#'.trim($url_key,'/').'#',$_SERVER['REQUEST_URI'],$params);
