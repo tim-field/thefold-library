@@ -173,6 +173,14 @@ class WordPress{
 
     static function get_post_content($post_id)
     {
-        return apply_filters('the_content', get_post_field('post_content', $post_id));
+        return $post_id ? apply_filters('the_content', get_post_field('post_content', $post_id)) : null;
+    }
+
+    static function get_post_by_slug($slug, $type='post')
+    {
+        global $wpdb;
+        $page = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type= %s", $slug, $type ) );
+        if ( $page )
+            return get_post( $page, $output );
     }
 }

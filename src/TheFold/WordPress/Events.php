@@ -67,15 +67,15 @@ class Events
 
     protected function init_acf()
     {
-        $template_dir = get_stylesheet_directory().'/ACF/';
-        $plugin_dir = __DIR__.'/ACF/';
+        $child_theme_dir = get_stylesheet_directory().'/acf/events.php';
+        $theme_dir = get_template_directory().'/acf/events.php';
+        $plugin_dir = __DIR__.'/acf/events.php';
 
-        foreach([static::CPT_EVENT, static::CPT_VENUE, static::CPT_SPEAKER, static::CPT_SPONSOR] as $cpt){
+        foreach([$child_theme_dir,$theme_dir,$plugin_dir] as $file) {
 
-            $dir = file_exists($template_dir.$cpt.'.php') ? $template_dir.$cpt.'.php' : $plugin_dir.$cpt.'.php';
-
-            if(file_exists($dir)) {
-                require $dir; 
+            if (file_exists($file)) {
+                require $file;
+                break;
             }
         }
     }
