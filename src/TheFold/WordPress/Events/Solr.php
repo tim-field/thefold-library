@@ -45,11 +45,11 @@ class Solr
        return SolrService::get_instance()->get_posts(array_merge($default_params, $params));
     }
 
-    public static function events_by_category($category_id,$params=[])
+    public static function events_by_category($category_slug,$params=[])
     {
         $default_params = [
             'post_types'=>Events::CPT_EVENT,
-            'fields'=>[Events::CAT_EVENT.'_taxonomy'=>$category_id],
+            'fields'=>[Events::CAT_EVENT.'_taxonomy'=>$category_slug],
             'sort' => ['starts_at_dt','desc']
             ];
 

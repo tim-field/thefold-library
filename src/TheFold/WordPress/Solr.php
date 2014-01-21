@@ -173,37 +173,70 @@ class Solr {
     return $return;
  }
 
- public function update_post(\WP_Post $post, $mapping=null)
+
+ public function update_post(\WP_Post $post)
  {
      if($post->post_status == 'publish') {
 
-         $solr_post = $this->get_update_post_document();
+         $this->pending_updates[$this->get_solr_id($post->ID)] = [ 'ID' => $post->ID, 'blog_id' => get_current_blog_id() ];
+     }
+ }
 
-         if (!$mapping) {
-             $mapping = $this->get_post_mapping();
+ protected function proccess_pending()
+ {
+     if(empty($this->pending_updates))
+        return;
+
+     $mapping = $this->get_post_mapping();
+    
+     if (!$mapping) {
+         throw new \Exception('No post mapping data. Is your filter returning ?');
+     }
+
+     foreach($this->pending_updates as $solr_id => $data)
+     { 
+         $post_id = $data['ID'];
+         $blog_id = $data['blog_id'];
+
+         if ( $blog_id && is_multisite() ){
+             switch_to_blog($blog_id);
          }
 
-         if (!$mapping) {
-             throw new \Exception('No post mapping data. Is your filter returning ?');
+         $post = get_post($post_id);
+
+         if( $post && $post->post_status == 'publish')
+         {
+             $solr_post = $this->get_update_post_document();
+             $author = get_userdata( $post->post_author );
+
+             foreach ($mapping as $solr_field => $wp_post_field) {
+
+                 $value = null;
+
+                 if (is_string($wp_post_field)) {
+                     $value = $post->$wp_post_field;
+                 }
+                 elseif (is_callable($wp_post_field)){
+                     $value = $wp_post_field($post, $author, $blog_id);
+                 }
+
+                 if(!is_null($value)){
+                     $solr_post->addField($solr_field,$value);
+                 }
+             }
+
+             //error_log('updating post with solr '.$post->ID." to blog ".(get_current_blog_id())."\n",3,'/tmp/thefold-solr.log');
+
+             $this->pending_updates[$solr_id] = apply_filters('thefold_solr_update_post', $solr_post, $post);
+
+         }
+         else{
+            unset($this->pending_updates[$solr_id]);
          }
 
-         $author = get_userdata( $post->post_author );
-
-         foreach ($mapping as $solr_field => $wp_post_field) {
-
-             if (is_string($wp_post_field)) {
-                 $value = $post->$wp_post_field;
-             }
-             elseif (is_callable($wp_post_field)){
-                 $value = $wp_post_field($post, $author);
-             }
-
-             if(!is_null($value)){
-                 $solr_post->addField($solr_field,$value);
-             }
+         if ( is_multisite() ) {
+             restore_current_blog();
          }
-
-         $this->pending_updates[$post->ID] = apply_filters('thefold_solr_update_post', $solr_post, $post);
      }
  }
 
@@ -211,15 +244,24 @@ class Solr {
  {
     $solr_post = $this->get_update_document();
 
-    $solr_post->addDeleteById($post->ID);
+    $solr_id = $this->get_solr_id($post->ID);
 
-    unset($this->pending_updates[$post->ID]);
+    $solr_post->addDeleteById($solr_id);
+
+    unset($this->pending_updates[$solr_id]);
  }
 
  public function deleteAll()
  {
      $update = $this->get_update_document();
-     $update->addDeleteQuery('*:*');
+     
+     if(is_multisite()) {
+         $update->addDeleteQuery('blogid:'.get_current_blog_id());
+
+     } else {
+         $update->addDeleteQuery('*:*');
+     }
+
      $update->addCommit();
      
      return $this->get_client()->update($update);
@@ -230,12 +272,18 @@ class Solr {
      if(!$this->post_mapping) {
 
          $this->post_mapping = [
-             'id'=>'ID',
-             'permalink'=>function($post){
+             'solr_id' => function($post){
+                return $this->get_solr_id($post->ID);
+             },
+             'id' => 'ID',
+             'blogid' => function($post_id,$author){
+                return get_current_blog_id();
+             },
+             'permalink' => function($post){
                 return get_permalink($post->ID);
              },
-             'title'=>'post_title',
-             'content'=> function($post) {
+             'title' => 'post_title',
+             'content' => function($post) {
                 return strip_tags($post->post_content);
              },
              'author' => function($post, $author) {
@@ -337,7 +385,7 @@ class Solr {
             return $names;
         };
         
-        // Index category and tag id's
+        // Index category and tag slugs
         $post_mapping[$taxonomie->name.'_taxonomy'] = function($post) use ($taxonomie) {
 
             $names = null;
@@ -347,7 +395,7 @@ class Solr {
                 $names = [];
 
                 foreach($terms as $term) {
-                    $names[] = $term->term_id;
+                    $names[] = $term->slug;
                 }
             }
 
@@ -360,13 +408,20 @@ class Solr {
 
  public function commit_pending()
  {
-     $update = $this->get_update_document();
+     $this->proccess_pending();
 
-     $update->addDocuments($this->pending_updates);
+     $result = null;
 
-     $update->addCommit();
+     if($this->pending_updates) {
 
-     $result = $this->get_client()->update($update);
+         $update = $this->get_update_document();
+
+         $update->addDocuments($this->pending_updates);
+
+         $update->addCommit();
+
+         $result = $this->get_client()->update($update);
+     }
 
      $this->pending_updates = [];
 
@@ -550,6 +605,11 @@ class Solr {
 
  public static function format_date($thedate){
     return gmdate('Y-m-d\TH:i:s\Z', is_numeric($thedate) ? $thedate : strtotime($thedate)); 
+ }
+
+ public function get_solr_id($post_id)
+ {
+    return $post_id.':'.get_current_blog_id();
  }
 
 }
