@@ -315,33 +315,45 @@ class Solr {
     
     if($custom_fields) foreach($custom_fields as $field) {
 
-        $is_date = false;
+        $type = 's';
 
-        switch(ACF::get_instance()->get_field_type($field)){
-            case 'true_false':
-                $type = 'b';
-                break;
-            case 'number':
-                $type = 'f';
-                break;
-            case 'date_time_picker':
-            case 'date_picker':
-                $type = 'dt'; 
-                $is_date = true;
-                break;
-            default:
-                $type = 's';
+        //TODO need a better way test that ACF plugin is active.
+        if (function_exists('\get_field_object')) {
+
+            switch(ACF::get_instance()->get_field_type($field)){
+                case 'true_false':
+                    $type = 'b';
+                    break;
+                case 'number':
+                    $type = 'f';
+                    break;
+                case 'date_time_picker':
+                case 'date_picker':
+                    $type = 'dt'; 
+                    $is_date = true;
+                    break;
+                default:
+                    $type = 's';
+            }
         }
+        
+        $field_name = apply_filters('thefold_solr_custom_field_name',"{$field}_{$type}",$field);
 
-        $post_mapping["{$field}_{$type}"] = function($post) use ($field, $is_date){
+        $post_mapping[$field_name] = function($post) use ($field, $type){
             
             $value = get_post_meta($post->ID,$field,true);
 
-            if($is_date && $value){
+            if($type == 'dt' && $value){
                 $value = gmdate('Y-m-d\TH:i:s\Z',(int) $value); 
             }
 
-            return $value ?: null;
+            if($value === ''){
+                $value = null;
+            }
+
+            return apply_filters('thefold_solr_custom_field_value', 
+                apply_filters('thefold_solr_custom_field_value_'.$field, $value, $field),
+                $field);
         };
     }
 
@@ -463,6 +475,11 @@ class Solr {
 
      if(isset($params['query'])){
         $query->setQuery($params['query']);
+     }
+
+     if(!isset($params['blogid']) && is_multisite())
+     {
+        $params['fields']['blogid'] = get_current_blog_id();
      }
 
      if(isset($params['date_range'])) {
@@ -608,6 +625,11 @@ class Solr {
  public function get_solr_id($post_id)
  {
     return $post_id.':'.get_current_blog_id();
+ }
+
+ public function registerPlugin($name, $object)
+ {
+    $this->get_client()->registerPlugin($name,$object); 
  }
 
 }
