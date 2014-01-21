@@ -316,23 +316,21 @@ class Solr {
     if($custom_fields) foreach($custom_fields as $field) {
 
         $is_date = false;
-        $type = 's';
 
-        if($meta = ACF::get_field_meta($field)){
-
-            switch($meta['type']){
-
-            case 'text':
-                $type = 't';
-                break;
+        switch(ACF::get_instance()->get_field_type($field)){
             case 'true_false':
                 $type = 'b';
                 break;
+            case 'number':
+                $type = 'f';
+                break;
             case 'date_time_picker':
+            case 'date_picker':
                 $type = 'dt'; 
                 $is_date = true;
                 break;
-            }
+            default:
+                $type = 's';
         }
 
         $post_mapping["{$field}_{$type}"] = function($post) use ($field, $is_date){
