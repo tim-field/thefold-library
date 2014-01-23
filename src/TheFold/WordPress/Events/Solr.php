@@ -48,12 +48,17 @@ class Solr
     public static function events_by_category($category_slug,$params=[])
     {
         $default_params = [
-            'post_types'=>Events::CPT_EVENT,
-            'fields'=>[Events::CAT_EVENT.'_taxonomy'=>$category_slug],
-            'sort' => ['starts_at_dt','desc']
-            ];
+            'post_types'=> Events::CPT_EVENT,
+            'sort' => ['starts_at_dt','desc'],
+            'fields' => [Events::CAT_EVENT.'_taxonomy'=>$category_slug]
+        ];
 
-        return SolrService::get_instance()->get_posts(array_merge($default_params, $params));
+        if(isset($params['fields'])){
+            $default_params['fields'] = array_merge($default_params['fields'], (array) $params['fields']);
+            unset($params['fields']);
+        }
+
+        return SolrService::get_instance()->get_posts(array_merge_recursive($default_params, $params));
     }
 
     public static function related_events(\WP_Post $event,$params=[])
