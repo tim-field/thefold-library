@@ -337,9 +337,9 @@ class Solr {
             }
         }
         
-        $field_name = apply_filters('thefold_solr_custom_field_name',"{$field}_{$type}",$field);
+        $type = apply_filters('thefold_solr_custom_field_type',$type,$field);
 
-        $post_mapping[$field_name] = function($post) use ($field, $type){
+        $post_mapping["{$field}_{$type}"] = function($post) use ($field, $type){
             
             $value = get_post_meta($post->ID,$field,true);
 
