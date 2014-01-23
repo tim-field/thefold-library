@@ -344,7 +344,7 @@ class Solr {
             $value = get_post_meta($post->ID,$field,true);
 
             if($type == 'dt' && $value){
-                $value = gmdate('Y-m-d\TH:i:s\Z',(int) $value); 
+                $value = $this->format_date($value); 
             }
 
             if($value === ''){
