@@ -287,7 +287,7 @@ class Solr {
                 return strip_tags($post->post_content);
              },
              'author' => function($post, $author) {
-                return $author->user_nicename;
+                return $author->ID;
              },
              'author_s' => function($post, $author) {
                 return get_author_posts_url($author->ID, $author->user_nicename);
@@ -343,12 +343,14 @@ class Solr {
             
             $value = get_post_meta($post->ID,$field,true);
 
-            if($type == 'dt' && $value){
-                $value = $this->format_date($value); 
-            }
-
             if($value === ''){
                 $value = null;
+            }
+            elseif($type == 'dt'){
+                $value = $this->format_date($value); 
+            }
+            elseif($type == 'i'){
+                $value = (int) $value;
             }
 
             return apply_filters('thefold_solr_custom_field_value', 

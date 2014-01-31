@@ -89,18 +89,18 @@ class Avatar{
                     'fields' => array (
                         array (
                             'key' => 'field_51f8aa8c1a2ec',
-                            'label' => 'Logo',//hack for ecomail
+                            'label' => 'Avatar',//hack for ecomail
                             'name' => 'avatar_attachment_id',
                             'type' => 'image',
                             'save_format' => 'id',
-                            'preview_size' => 'select-logo',//hack for ecomail
+                            'preview_size' => 'thumbnail',//hack for ecomail
                             'library' => 'all',
                         ),
                     ),
                     'location' => array (
                         array (
                             array (
-                                'param' => 'ef_user',
+                                'param' => 'user',
                                 'operator' => '==',
                                 'value' => 'all',
                                 'order_no' => 0,
