@@ -24,6 +24,7 @@ class Solr {
  protected $per_page = null;
  protected $update_document;
  protected $pending_updates = [];
+ protected $pending_deletes = [];
  protected $post_mapping = null;
 
  static function get_instance($path=null, $hostname=null, $port=null)
@@ -242,11 +243,9 @@ class Solr {
 
  public function delete_post(\WP_Post $post)
  {
-    $solr_post = $this->get_update_document();
-
     $solr_id = $this->get_solr_id($post->ID);
 
-    $solr_post->addDeleteById($solr_id);
+    $this->pending_deletes[$solr_id] = true;
 
     unset($this->pending_updates[$solr_id]);
  }
@@ -424,18 +423,33 @@ class Solr {
 
      $result = null;
 
+     $update = null;
+
      if($this->pending_updates) {
 
          $update = $this->get_update_document();
 
          $update->addDocuments($this->pending_updates);
+     }
 
+     if($this->pending_deletes) {
+
+         if(!$update){
+             $update = $this->get_update_document();
+         }
+
+         $update->addDeleteByIds(array_keys($this->pending_deletes));
+     }
+
+     if($update){
+     
          $update->addCommit();
-
+         
          $result = $this->get_client()->update($update);
      }
 
      $this->pending_updates = [];
+     $this->pending_deletes = [];
 
      return $result;
  }
