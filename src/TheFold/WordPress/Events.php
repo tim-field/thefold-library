@@ -41,6 +41,16 @@ class Events
         ));
     }
 
+    public static function get_sponsors(\WP_Post $event)
+    {
+        return get_posts( array(
+            'connected_type' => static::P2P_EVENT_SPONSOR,
+            'connected_items' => $event,
+            'nopaging' => true,
+            'suppress_filters' => false
+        ));
+    }
+
     protected function __construct()
     {
        $this->init_cpt(); 
