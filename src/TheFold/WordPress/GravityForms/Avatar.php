@@ -43,12 +43,40 @@ class Avatar{
 
         add_filter( 'get_avatar', function($avatar, $user_id, $size, $default, $alt){
 
-            if(is_numeric($user_id)) {
+            $key = "$user_id:".serialize($size);
 
-                if ($avatar && !$this->overide)
-                    return $avatar;
-                elseif ($attachment_id = get_user_meta($user_id, $this->meta_key, true))
-                    return wp_get_attachment_image($attachment_id,array($size,$size));
+            if($cache = get_transient( $key )){
+                $avatar = $cache;
+            }else{
+
+                if(!is_numeric($user_id)){
+                
+                    $user = get_user_by('email',$user_id);
+                    $user_id = $user->ID;
+                }
+
+                if(is_numeric($user_id)) {
+
+                    if ($avatar && !$this->overide)
+                        return $avatar;
+                    elseif ($attachment_id = get_user_meta($user_id, $this->meta_key, true))
+
+                        if( is_numeric($size) && $data = image_get_intermediate_size($attachment_id,array($size,$size))){
+
+                            if ( empty($data['url']) && !empty($data['file']) ) {
+                                $file_url = wp_get_attachment_url($attachment_id);
+                                $data['path'] = path_join( dirname($imagedata['file']), $data['file'] );
+                                $data['url'] = path_join( dirname($file_url), $data['file'] );
+                            }
+
+                            $avatar = "<img src='{$data['url']}' class='avatar' />";
+
+                        }else{
+                            $avatar = wp_get_attachment_image($attachment_id,array($size,$size));
+                        }
+
+                    set_transient( $key, $avatar, 14400);
+                }
             }
 
             return $avatar;
