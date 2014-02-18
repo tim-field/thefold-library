@@ -43,7 +43,7 @@ class Avatar{
 
         add_filter( 'get_avatar', function($avatar, $user_id, $size, $default, $alt){
 
-            $key = "$user_id:".serialize($size);
+            $key = serialize($user_id).":".serialize($size);
 
             if($cache = get_transient( $key )){
                 $avatar = $cache;
