@@ -72,7 +72,7 @@ class Avatar{
                             $avatar = "<img src='{$data['url']}' class='avatar' />";
 
                         }else{
-                            $avatar = wp_get_attachment_image($attachment_id,array($size,$size));
+                            $avatar = wp_get_attachment_image($attachment_id,array($size,$size),false,array('class'=>'avatar'));
                         }
 
                     set_transient( $key, $avatar, 14400);
