@@ -75,7 +75,7 @@ class Avatar{
                             $avatar = wp_get_attachment_image($attachment_id,array($size,$size),false,array('class'=>'avatar'));
                         }
 
-                    set_transient( $key, $avatar, 14400);
+                    set_transient( $key, $avatar, 10);
                 }
             }
 
