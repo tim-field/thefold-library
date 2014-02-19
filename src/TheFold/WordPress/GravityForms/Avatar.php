@@ -59,7 +59,7 @@ class Avatar{
 
                     if ($avatar && !$this->overide)
                         return $avatar;
-                    elseif ($attachment_id = get_user_meta($user_id, $this->meta_key, true))
+                    elseif ($attachment_id = get_user_meta($user_id, $this->meta_key, true)) {
 
                         if( is_numeric($size) && $data = image_get_intermediate_size($attachment_id,array($size,$size))){
 
@@ -72,10 +72,18 @@ class Avatar{
                             $avatar = "<img src='{$data['url']}' class='avatar' />";
 
                         }else{
-                            $avatar = wp_get_attachment_image($attachment_id,array($size,$size),false,array('class'=>'avatar'));
-                        }
 
-                    set_transient( $key, $avatar, 10);
+                            $image = wp_get_attachment_image_src($attachment_id, $size, $icon);
+                            if ( $image ) {
+                                list($src, $width, $height) = $image;
+
+                                $avatar = "<img src='{$src}' class='avatar' />";
+                            }
+                        }
+                        
+                        set_transient( $key, $avatar, 14);
+
+                    }
                 }
             }
 
