@@ -3,9 +3,9 @@
 namespace TheFold\WordPress\Events;
 
 use TheFold\WordPress\Events;
-use TheFold\WordPress\Solr as SolrService;
+use TheFold\FastPress as FP;
 
-class Solr
+class FastPress
 {
     protected static $instance;
 
@@ -30,7 +30,7 @@ class Solr
             'sort' => ['starts_at_dt','desc'],
             ];
 
-       return SolrService::get_instance()->get_posts(array_merge($default_params,$params));
+       return FP::get_instance()->get_posts(array_merge($default_params,$params));
     }
 
     public static function speakers_by_event(\WP_Post $event, $params=[])
@@ -42,7 +42,7 @@ class Solr
             'cache_key' => $cache ? __CLASS__.':'.__FUNCTION__.':'.$event->ID : null
             ];
 
-       return SolrService::get_instance()->get_posts(array_merge($default_params, $params));
+       return FP::get_instance()->get_posts(array_merge($default_params, $params));
     }
 
     public static function events_by_category($category_slug,$params=[])
@@ -58,7 +58,7 @@ class Solr
             unset($params['fields']);
         }
 
-        return SolrService::get_instance()->get_posts(array_merge_recursive($default_params, $params));
+        return FP::get_instance()->get_posts(array_merge_recursive($default_params, $params));
     }
 
     public static function related_events(\WP_Post $event,$params=[])
@@ -69,12 +69,12 @@ class Solr
             'sort' => ['starts_at_dt','desc']
             ];
 
-       return SolrService::get_instance()->get_posts(array_merge($default_params, $params));
+       return FP::get_instance()->get_posts(array_merge($default_params, $params));
     }
 
     public static function get_featured($params=[]) {
 
-        $solr = SolrService::get_instance();
+        $solr = FP::get_instance();
 
         $default_params = [
             'fields'=>[
