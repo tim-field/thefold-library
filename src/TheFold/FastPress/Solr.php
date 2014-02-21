@@ -4,6 +4,7 @@ namespace TheFold\FastPress;
 
 use \Solarium\Client;
 use \TheFold\WordPress;
+use \TheFold\FastPress;
 use \TheFold\WordPress\Cache;
 use \TheFold\WordPress\ACF;
 
@@ -12,8 +13,6 @@ class Solr implements Engine{
     
     use Cache; 
 
- const SETTING_NAMESPACE = 'thefold_fastpress_solr';
- 
  protected static $instance;
 
  protected $hostname;
@@ -54,7 +53,7 @@ class Solr implements Engine{
  //interface 
  function index_post(\WP_Post $post)
  {
-     if(in_array($post->post_type, WordPress::get_option(self::SETTING_NAMESPACE,'post_types'))) {
+     if(in_array($post->post_type, (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_types'))) {
 
          $this->update_post($post);
 
@@ -337,7 +336,7 @@ class Solr implements Engine{
 
  protected function map_custom_fields($post_mapping)
  {
-    $custom_fields = WordPress::get_option(static::SETTING_NAMESPACE,'custom_fields');
+    $custom_fields = WordPress::get_option(FastPress::SETTING_NAMESPACE,'custom_fields');
     
     if($custom_fields) foreach($custom_fields as $field) {
 
@@ -390,7 +389,7 @@ class Solr implements Engine{
 
  protected function map_taxonomies($post_mapping)
  {
-    $taxonomies = WordPress::get_option(static::SETTING_NAMESPACE,'taxonomies');
+    $taxonomies = WordPress::get_option(FastPress::SETTING_NAMESPACE,'taxonomies');
 
     foreach($taxonomies as $name) {
 
@@ -402,7 +401,7 @@ class Solr implements Engine{
             $schema_name .= '_srch';
         }
 
-        $category_as_taxonomy = ($taxonomie->name == 'category' && Wordpress::get_option(static::SETTING_NAMESPACE,'category_as_taxonomy',1));
+        $category_as_taxonomy = ($taxonomie->name == 'category' && Wordpress::get_option(FastPress::SETTING_NAMESPACE,'category_as_taxonomy',1));
 
         // Index category and tag names
         $post_mapping[$schema_name] = function($post) use ($taxonomie, $category_as_taxonomy) {

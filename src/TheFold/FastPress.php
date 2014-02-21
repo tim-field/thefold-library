@@ -18,9 +18,9 @@ class FastPress implements Engine
     function __construct($engine='Solr'){
     
         $this->engine = Solr::get_instance(
-            WordPress::get_option(Solr::SETTING_NAMESPACE,'path','/solr/'),
-            WordPress::get_option(Solr::SETTING_NAMESPACE,'host','127.0.0.1'),
-            WordPress::get_option(Solr::SETTING_NAMESPACE,'port','8080')
+            WordPress::get_option(self::SETTING_NAMESPACE,'path'),
+            WordPress::get_option(self::SETTING_NAMESPACE,'host'),
+            WordPress::get_option(self::SETTING_NAMESPACE,'port')
         ); 
     }
 
