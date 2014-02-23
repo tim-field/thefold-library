@@ -194,10 +194,12 @@ class Solr implements Engine{
 
  public function update_post(\WP_Post $post)
  {
-     if($post->post_status == 'publish') {
+     $this->pending_updates[$this->get_solr_id($post->ID)] = [ 'ID' => $post->ID, 'blog_id' => get_current_blog_id() ];
+ }
 
-         $this->pending_updates[$this->get_solr_id($post->ID)] = [ 'ID' => $post->ID, 'blog_id' => get_current_blog_id() ];
-     }
+ protected function valid_status($status){
+    
+     return in_array($status, (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_status','publish'));
  }
 
  protected function proccess_pending()
@@ -222,7 +224,7 @@ class Solr implements Engine{
 
          $post = get_post($post_id);
 
-         if( $post && $post->post_status == 'publish')
+         if( $post && $this->valid_status($post->post_status))
          {
              $solr_post = $this->get_update_post_document();
              $author = get_userdata( $post->post_author );
@@ -551,7 +553,7 @@ class Solr implements Engine{
          $query->createFilterQuery('posttype')->setQuery('type:('.implode(' OR ',(array) $params['post_types']).')');
      }
 
-     $params['fields'] = array_merge(array_intersect($params,$this->core_fields), (array) $params['fields']);
+     $params['fields'] = array_merge(array_intersect_key($params,array_flip($this->core_fields)), (array) $params['fields']);
 
      if(!empty($params['fields'])) {
         
@@ -668,7 +670,7 @@ class Solr implements Engine{
 
  protected function create_query_string($field, $value)
  {
-     return $field.':("'.implode('" "', (array) $values).'")';
+     return $field.':("'.implode('" "', (array) $value).'")';
  }
 
  public function get_solr_id($post_id)

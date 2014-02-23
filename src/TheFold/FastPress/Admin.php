@@ -32,6 +32,13 @@ class Admin
             new Setting\Field('post_types', 'Post Types', $indexing, function($post_types,$field,$setting_group) {
                 include __DIR__.'/views/post-types.php';
             }),
+            
+            new Setting\Field('post_status', 'Post Status', $indexing, function($post_status,$field,$setting_group) {
+                if($post_status==''){
+                    $post_status[] = 'publish';
+                }
+                include __DIR__.'/views/post-status.php';
+            }),
 
             new Setting\Field('taxonomies', 'Taxonomies', $indexing, function($taxonomies,$field,$setting_group) {
                 include __DIR__.'/views/taxonomies.php';
@@ -65,15 +72,21 @@ class Admin
                 $total= 0;
                 $total_indexed = $page * $per_page;
                 $post_types = WordPress::get_option($this->setting_namespace,'post_types')?:['post','page'];
+                $stati = WordPress::get_option($this->setting_namespace,'post_status','publish');
 
                 $posts = get_posts([
                     'posts_per_page'=>$per_page,
                     'offset'=> $total_indexed,
                     'post_type'=> $post_types,
-                    ]);
-
+                    'post_status'=> $statuss,
+                ]);
+                
                 foreach($post_types as $type){
-                    $total += wp_count_posts($type)->publish; // Expensive ? 
+                    
+                    foreach($stati as $status){
+                    
+                        $total += wp_count_posts($type)->$status;
+                    }
                 }
 
                 foreach($posts as $post){

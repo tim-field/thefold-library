@@ -40,7 +40,7 @@ class FastPress implements Engine
    
         $defaults = [
             'post_type'=>'post',
-            'post_status'=>'published'
+            'post_status'=>'publish'
         ];
 
         if(!isset($args['posts_per_page'])){
