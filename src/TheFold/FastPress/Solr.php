@@ -22,11 +22,30 @@ class Solr implements Engine{
  protected $facets = ['category'=>'always','tag'=>'always'];
  protected $last_resultset = null;
  protected $result_count = null;
- protected $per_page = null;
  protected $update_document;
  protected $pending_updates = [];
  protected $pending_deletes = [];
  protected $post_mapping = null;
+ protected $with_facets = false;
+ protected $core_fields = [
+         'ID',
+         'post_author',
+         'post_name',
+         'post_type',
+         'post_title',
+         'post_date',
+         'post_date_gmt',
+         'post_content',
+         'post_excerpt',
+         'post_status',
+         'comment_status',
+         'ping_status',
+         'post_password',
+         'post_parent',
+         'post_modified',
+         'post_modified_gmt',
+         'comment_count'];
+
 
  static function get_instance($path=null, $hostname=null, $port=null)
  {
@@ -77,6 +96,7 @@ class Solr implements Engine{
  function set_facets($facets=[])
  {
     $this->facets = $facets;
+    $this->with_facets = true;
  }
  
  static function format_date($thedate){
@@ -101,16 +121,23 @@ class Solr implements Engine{
 
      $ids = array();
 
+     $hard_fetch = !empty($params['hard_fetch']);
+
      foreach($resultset as $document){
-         
-         foreach($document as $field => $value){
+
+         if($hard_fetch){ 
              
-             if($field == 'id')
-                 $ids[] = $post_id = $value;
+             $posts[] = \WP_Post::get_instance($document['ID']);
+
+         } else {
+             
+            $fields = array_intersect_key($document->getFields(),array_flip($this->core_fields));
+
+            $posts[] = new \WP_Post((object)$fields);
          }
      }
-
-     $posts = $ids ? array_map( 'get_post', $ids ) : [];
+    
+     update_post_caches($posts, isset($params['post_type']) ? $params['post_type'] : 'post', true, true);
 
      if(!empty($params['cache_key'])){
         $this->cache_set($params['cache_key'],$posts);
@@ -118,6 +145,7 @@ class Solr implements Engine{
 
      return $posts;
  }
+
 
  function get_facet($name, $qparams=null, $reuse=true)
  {
@@ -158,54 +186,9 @@ class Solr implements Engine{
      return $return;
  }
 
- function get_result_count()
+ function get_count()
  {
      return $this->result_count;
- }
-
- function get_paging_links(callable $format_function=null)
- {
-     if(!$format_function){
-         $format_function = function($url,$page,$qs){
-             $qs['page'] = $page;
-             return $url.'?'.http_build_query($qs);
-         };
-     }
-
-    $return = [];
-    
-    parse_str($_SERVER['QUERY_STRING'],$qs);
-
-           //fixes array values in get strings
-    $qs = str_replace('[0]','[]',$qs);
-
-    $url = $_SERVER['REQUEST_URI'];
-
-    if($pos = strpos($url,'?')){
-        $url = substr($url,0,$pos);
-    }
-
-    $current_page = isset($qs['page']) ? $qs['page'] : 1;
-    $total_pages = ceil($this->get_result_count() / $this->per_page);
-
-    if($total_pages > 1){
-
-        if ($previous = $current_page -1) {
-            $return['previous'] = $format_function($url,$previous,$qs);
-        }
-
-        for($i = max(1,$current_page-5); $i <= min($total_pages,$current_page+5); $i++) {
-            $return["$i"] = $format_function($url,$i,$qs);
-        }
-
-        $next_page = $current_page + 1;
-
-        if ($next_page < $total_pages){
-            $return['next'] = $format_function($url,$next_page,$qs);
-        }
-    }
-    
-    return $return;
  }
 
 
@@ -297,33 +280,57 @@ class Solr implements Engine{
      if(!$this->post_mapping) {
 
          $this->post_mapping = [
+
              'solr_id' => function($post){
                 return $this->get_solr_id($post->ID);
              },
-             'id' => 'ID',
              'blogid' => function($post_id,$author){
                 return get_current_blog_id();
              },
+
+             'ID' => 'ID',
+             'post_author' => function($post,$author){
+                return $author->display_name;
+             },
+             'post_name' => 'post_name',
+             'post_type' => 'post_type',
+             'post_title' => function($post) {
+                return apply_filters('the_title',$post->post_title);
+             },
+             'post_date' => function($post) {
+                return $this->format_date($post->post_date);
+             },
+             'post_date_gmt' => function($post) {
+                return $this->format_date($post->post_date_gmt);
+             },
+             'post_content' => function($post) {
+                return apply_filters('the_content',$post->post_content);
+             },
+             'post_excerpt' => function($post) {
+	        return apply_filters( 'get_the_excerpt', $post->post_excerpt );
+             },
+             'post_status' => 'post_status',
+             'comment_status' => function($post) {
+                return $post->comment_status == 'open' ? true : false;
+             },
+             'ping_status' => function($post) {
+                return $post->ping_status == 'open' ? true : false;
+             },
+             'post_parent' => 'post_parent',
+             'post_modified' => function($post) {
+                return $this->format_date($post->post_modified);
+             },
+             'post_modified_gmt' => function($post) {
+                return $this->format_date($post->post_modified_gmt);
+             },
+             'comment_count' => 'comment_count',
              'permalink' => function($post){
                 return get_permalink($post->ID);
              },
-             'title' => 'post_title',
-             'content' => function($post) {
-                return strip_tags($post->post_content);
-             },
-             'author' => function($post, $author) {
+             'author_id' => function($post, $author) {
                 return $author->ID;
              },
-             'author_s' => function($post, $author) {
-                return get_author_posts_url($author->ID, $author->user_nicename);
-             },
-             'type' => 'post_type',
-             'date' => function($post) {
-                return $this->format_date($post->post_date_gmt);
-             },
-             'modified' => function($post) {
-                return $this->format_date($post->post_modified_gmt);
-             },
+
          ];
             
          $this->post_mapping = $this->map_taxonomies($this->map_custom_fields($this->post_mapping));
@@ -389,6 +396,12 @@ class Solr implements Engine{
 
  protected function map_taxonomies($post_mapping)
  {
+     /**
+      * Todo there is more to do in this function around heiracy
+      *
+      * the get_ancestors function might be good
+      */
+
     $taxonomies = WordPress::get_option(FastPress::SETTING_NAMESPACE,'taxonomies');
 
     foreach($taxonomies as $name) {
@@ -397,9 +410,7 @@ class Solr implements Engine{
 
         $schema_name = $taxonomie->name;
 
-        if(!$taxonomie->_builtin){
-            $schema_name .= '_srch';
-        }
+        $schema_name .= '_txt';
 
         $category_as_taxonomy = ($taxonomie->name == 'category' && Wordpress::get_option(FastPress::SETTING_NAMESPACE,'category_as_taxonomy',1));
 
@@ -421,6 +432,7 @@ class Solr implements Engine{
 
             return $names;
         };
+
         
         // Index category and tag slugs
         $post_mapping[$taxonomie->name.'_taxonomy'] = function($post) use ($taxonomie) {
@@ -496,19 +508,17 @@ class Solr implements Engine{
 
  protected function build_query($params=array())
  {
-     $default_params = array(
-         'nopaging'=>false,
-         'page'=>1,
-         'per_page'=>5
-     );
+     $default_params = [
+         'nopaging' => false,
+         'page' => 1,
+         'with_facets' => $this->with_facets
+     ];
 
      $params = array_merge($default_params, $params);
 
-     $this->per_page = $params['per_page'];
-
      $query = $this->get_query();
 
-     $query->setFields(array('id'));
+     //$query->setFields(array('id'));
 
      if(isset($params['boost'])){
          $dismax = $query->getDisMax();
@@ -541,7 +551,9 @@ class Solr implements Engine{
          $query->createFilterQuery('posttype')->setQuery('type:('.implode(' OR ',(array) $params['post_types']).')');
      }
 
-     if(isset($params['fields'])) {
+     $params['fields'] = array_merge(array_intersect($params,$this->core_fields), (array) $params['fields']);
+
+     if(!empty($params['fields'])) {
         
          foreach($params['fields'] as $field => $value) {
              $query->createFilterQuery($field.'-query')->setQuery( $this->create_query_string($field, $value));
@@ -590,7 +602,7 @@ class Solr implements Engine{
      elseif(!isset($params['query'])) {
          //if not a search query, default to post date sort
 
-         $sorts['date'] = $query::SORT_DESC;
+         $sorts['post_date'] = $query::SORT_DESC;
      }
 
      if($sorts) {
@@ -601,7 +613,7 @@ class Solr implements Engine{
          $query->setRows($params['rows']);
      }
      elseif(!$params['nopaging']) {
-         $query->setStart( ($params['page']-1) * $params['per_page'] )->setRows($params['per_page']);
+         $query->setStart( ($params['page']-1) * $params['posts_per_page'] )->setRows($params['posts_per_page']);
      }
 
      return $query;
@@ -654,13 +666,10 @@ class Solr implements Engine{
      ];
  }
 
- protected function create_query_string($field,$value){
-     $values = array_map('urldecode', (array) $value);
-
-     return $field.':("'.implode('" "', $values).'")';
+ protected function create_query_string($field, $value)
+ {
+     return $field.':("'.implode('" "', (array) $values).'")';
  }
-
-
 
  public function get_solr_id($post_id)
  {
