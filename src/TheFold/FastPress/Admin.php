@@ -78,7 +78,7 @@ class Admin
                     'posts_per_page'=>$per_page,
                     'offset'=> $total_indexed,
                     'post_type'=> $post_types,
-                    'post_status'=> $statuss,
+                    'post_status'=> $stati,
                 ]);
                 
                 foreach($post_types as $type){
