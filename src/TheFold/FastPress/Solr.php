@@ -29,6 +29,7 @@ class Solr implements Engine{
  protected $with_facets = false;
  protected $core_fields = [
          'ID',
+         'id',
          'post_author',
          'post_name',
          'post_type',
@@ -115,11 +116,11 @@ class Solr implements Engine{
          }
      }
 
+     $posts = [];
+
      $resultset = $this->get_resultset($params,false);
 
      $this->result_count = $resultset->getNumFound();
-
-     $ids = array();
 
      $hard_fetch = !empty($params['hard_fetch']);
 
@@ -127,13 +128,11 @@ class Solr implements Engine{
 
          if($hard_fetch){ 
              
-             $posts[] = \WP_Post::get_instance($document['ID']);
+             $posts[] = \WP_Post::get_instance($document['id']);
 
          } else {
              
-            $fields = array_intersect_key($document->getFields(),array_flip($this->core_fields));
-
-            $posts[] = new \WP_Post((object)$fields);
+            $posts[] = $this->init_wp_post($document->getFields());
          }
      }
     
@@ -290,7 +289,7 @@ class Solr implements Engine{
                 return get_current_blog_id();
              },
 
-             'ID' => 'ID',
+             'id' => 'ID',
              'post_author' => function($post,$author){
                 return $author->display_name;
              },
@@ -687,6 +686,27 @@ class Solr implements Engine{
  public function admin_init()
  {
      //Admin::get_instance(self::SETTING_NAMESPACE); 
+ }
+
+ //take returned solr fields and return a wp post object
+ protected function init_wp_post($fields)
+ {
+     /**
+      * Todo fix this
+      $fields['post_date'] = date('Y-m-d H:i:s',strtotime($fields['post_date']));
+     $fields['post_date_gmt'] = date('Y-m-d H:i:s',strtotime($fields['post_date_gmt']));
+      */
+
+     $safe_fields = [];
+
+     foreach($fields as $field => $value){
+         $safe_fields[ strtolower(str_replace('-','_',$field)) ] = $value;
+     }
+
+     $safe_fields['ID'] = $fields['id'];
+     unset($safe_fields['id']);
+
+     return new \WP_Post((object)$safe_fields);
  }
 
 }
