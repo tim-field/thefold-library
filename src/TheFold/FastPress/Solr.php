@@ -696,10 +696,15 @@ class Solr implements Engine{
       $fields['post_date'] = date('Y-m-d H:i:s',strtotime($fields['post_date']));
      $fields['post_date_gmt'] = date('Y-m-d H:i:s',strtotime($fields['post_date_gmt']));
       */
+     $fields['post_date'] = date('Y-m-d H:i:s', strtotime($fields['post_date']));
+     $fields['post_date_gmt'] = date('Y-m-d H:i:s', strtotime($fields['post_date_gmt']));
+     
+     $fields['post_modified'] = date('Y-m-d H:i:s', strtotime($fields['post_modified']));
+     $fields['post_modified_gmt'] = date('Y-m-d H:i:s', strtotime($fields['post_modified_gmt']));
 
      $safe_fields = [];
 
-     foreach($fields as $field => $value){
+     foreach($fields as $field => $value) {
          $safe_fields[ strtolower(str_replace('-','_',$field)) ] = $value;
      }
 
