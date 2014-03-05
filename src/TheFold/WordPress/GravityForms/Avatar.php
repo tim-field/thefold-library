@@ -3,7 +3,6 @@ namespace TheFold\WordPress\GravityForms;
 use TheFold\WordPress\Import;
 use TheFold\WordPress\GravityForm;
 
-
 class Avatar{
 
     protected $meta_key;
@@ -17,6 +16,26 @@ class Avatar{
 
         $this->init_hooks();
     }
+	
+    /**
+     * If using gravityforms user registration plugin, then this will return true
+     * when viewing a create user form. This is useful to know when to not show
+     * an avatar. i.e don't show one on create because they aren't going to have one yet.
+     */
+    function is_create_user_form($form_id){
+
+        if(!class_exists('\GFUser')){
+            return;
+        }
+
+        if($config = \GFUser::get_config($form_id))
+        {
+            return rgars($config, 'meta/feed_type') == 'create';    
+        }
+        
+        return false;
+    }
+
 // wp-content/plugins/emb-retailers/emb-retailers.php
 
     protected function init_hooks()
@@ -26,12 +45,12 @@ class Avatar{
 
             $gf = new GravityForm($form,$entry);
 
-            if($file_path = $gf->getValue($this->gform_field)) {
+            if($file_path = $gf->getValue($this->gform_field))  {
                     
                 if($attachment_id = Import::create_attachment($file_path)) {
 
                     update_user_meta( 
-                        get_current_user_id(), 
+                        apply_filters('ecefolio_gform_profile_user_id',get_current_user_id()),
                         $this->meta_key, 
                         $attachment_id 
                     );
@@ -94,20 +113,34 @@ class Avatar{
 
         add_filter( 'gform_field_content',function($field_content,$field,$value,$lead_id,$form_id){
 
-            if($field['adminLabel'] == $this->gform_field && !is_admin()){
+            if( ($field['adminLabel'] == $this->gform_field || $field['cssClass'] == $this->gform_field ) && !is_admin()){
 
                 $field_id = $field['id'];
                 $description = $field['description'];
-                $avatar = get_avatar(get_current_user_id());
+                $avatar = '';
+
+                    //don't show avatars when first creating a user
+                if( ! $this->is_create_user_form($form_id)) {
+                    $avatar = get_avatar(apply_filters('ecefolio_gform_profile_user_id',get_current_user_id()));
+                }
+
                 $label = $field['label'];
 
                 $field_content = "
                     <label class='gfield_label' for='input_{$form_id}_{$field_id}'>$label</label>
-                    <div class='gfield_description'>$description</div>
+
                     <div class='ginput_container'>
-                    <input name='input_{$field_id}' id='input_{$form_id}_{$field_id}' type='file' value='' size='20' class='gform_hidden medium'  /> 
-                    <span class='ginput_preview'>$avatar | <a href='javascript:;' onclick='gformDeleteUploadedFile({$form_id}, {$field_id});'>delete</a></span>
-                    </div>";
+                        <input name='input_{$field_id}' id='input_{$form_id}_{$field_id}' type='file' value='' size='20' class='". (($avatar) ? "gform_hidden" : "") ." medium'  />";
+                
+                if($avatar){
+                    $field_content .= "
+                    <span class='ginput_preview'>$avatar | <a href='javascript:;' onclick='gformDeleteUploadedFile({$form_id}, {$field_id});'>delete</a></span> ";
+                }
+
+                $field_content .="
+                    </div>
+
+                    <div class='gfield_description'>$description</div> ";
 
             }
 
@@ -125,11 +158,11 @@ class Avatar{
                     'fields' => array (
                         array (
                             'key' => 'field_51f8aa8c1a2ec',
-                            'label' => 'Avatar',//hack for ecomail
+                            'label' => 'Avatar',
                             'name' => 'avatar_attachment_id',
                             'type' => 'image',
                             'save_format' => 'id',
-                            'preview_size' => 'thumbnail',//hack for ecomail
+                            'preview_size' => 'thumbnail',
                             'library' => 'all',
                         ),
                     ),
