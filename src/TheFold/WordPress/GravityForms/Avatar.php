@@ -41,7 +41,7 @@ class Avatar{
     protected function init_hooks()
     {
 
-        add_action( 'gform_after_submission', function($entry, $form){
+        add_action( 'gform_user_registered', function($user_id, $user_config, $entry, $user_pass, $form){
 
             $gf = new GravityForm($form,$entry);
 
@@ -50,14 +50,14 @@ class Avatar{
                 if($attachment_id = Import::create_attachment($file_path)) {
 
                     update_user_meta( 
-                        apply_filters('ecefolio_gform_profile_user_id',get_current_user_id()),
+                        apply_filters('ecefolio_gform_profile_user_id',$user_id),
                         $this->meta_key, 
                         $attachment_id 
                     );
                 }
             }
 
-        },10,2);
+        },10,5);
 
 
         add_filter( 'get_avatar', function($avatar, $user_id, $size, $default, $alt){
