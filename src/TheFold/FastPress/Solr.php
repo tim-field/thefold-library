@@ -45,6 +45,8 @@ class Solr implements Engine{
          'post_parent',
          'post_modified',
          'post_modified_gmt',
+         'menu_order',
+         'post_mime_type',
          'comment_count'];
 
 
@@ -325,6 +327,8 @@ class Solr implements Engine{
                 return $this->format_date($post->post_modified_gmt);
              },
              'comment_count' => 'comment_count',
+             'menu_order' => 'menu_order',
+             'post_mime_type' => 'post_mime_type',
              'permalink' => function($post){
                 return get_permalink($post->ID);
              },
