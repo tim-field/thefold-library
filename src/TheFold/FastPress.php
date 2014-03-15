@@ -108,6 +108,11 @@ class FastPress implements Engine
         return $this->engine->delete_post($post_id);
     }
 
+    function delete_all()
+    {
+        return $this->engine->delete_all(); 
+    }
+
     function admin_init()
     {
         Admin::get_instance(self::SETTING_NAMESPACE);
@@ -122,6 +127,11 @@ class FastPress implements Engine
     function get_facets($qparams=null)
     {
         return $this->engine->get_facets($qparams); 
+    }
+
+    function get_facet($name, $qparams=null, $reuse=true)
+    {
+        return $this->engine->get_facet($name,$qparams,$reuse);
     }
 
     function get_count()

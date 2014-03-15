@@ -262,7 +262,7 @@ class Solr implements Engine{
  }
 
 
- public function deleteAll()
+ public function delete_all()
  {
      $update = $this->get_update_document();
      
@@ -307,10 +307,10 @@ class Solr implements Engine{
                 return $this->format_date($post->post_date_gmt);
              },
              'post_content' => function($post) {
-                return apply_filters('the_content',$post->post_content);
+                return $post->post_content ?: null;
              },
              'post_excerpt' => function($post) {
-	        return apply_filters( 'get_the_excerpt', $post->post_excerpt );
+	        return $this->post_excerpt ?: null;
              },
              'post_status' => 'post_status',
              'comment_status' => function($post) {
@@ -374,7 +374,7 @@ class Solr implements Engine{
             }
         }
         
-        $type = apply_filters('thefold_solr_custom_field_type',$type,$field);
+        $type = apply_filters('fastpress_custom_field_type',$type,$field);
 
         $post_mapping["{$field}_{$type}"] = function($post) use ($field, $type){
             
@@ -390,8 +390,8 @@ class Solr implements Engine{
                 $value = (int) $value;
             }
 
-            return apply_filters('thefold_solr_custom_field_value', 
-                apply_filters('thefold_solr_custom_field_value_'.$field, $value, $field),
+            return apply_filters('fastpress_custom_field_value', 
+                apply_filters('fastpress_custom_field_value_'.$field, $value, $field),
                 $field);
         };
     }

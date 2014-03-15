@@ -107,9 +107,7 @@ class Admin
 
             add_action('wp_ajax_'.self::AJAX_DELETE_ALL, function() {
 
-                $solr = Solr::get_instance();
-
-                $result = $solr->deleteAll();
+                $result = \FastPress\delete_all();
 
                 wp_send_json([
                     'status'=>$result->getStatus(),
