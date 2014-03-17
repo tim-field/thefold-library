@@ -36,29 +36,37 @@ class Avatar{
         return false;
     }
 
-// wp-content/plugins/emb-retailers/emb-retailers.php
+
+    protected function set_image($user_id, $form, $entry) {
+        $gf = new GravityForm($form,$entry);
+
+        if($file_path = $gf->getValue($this->gform_field))  {
+
+            if($attachment_id = Import::create_attachment($file_path)) {
+
+                update_user_meta( 
+                    $user_id,
+                    $this->meta_key, 
+                    $attachment_id 
+                );
+            }
+        }
+    }
 
     protected function init_hooks()
     {
 
         add_action( 'gform_user_registered', function($user_id, $user_config, $entry, $user_pass, $form){
 
-            $gf = new GravityForm($form,$entry);
-
-            if($file_path = $gf->getValue($this->gform_field))  {
-                    
-                if($attachment_id = Import::create_attachment($file_path)) {
-
-                    update_user_meta( 
-                        apply_filters('ecefolio_gform_profile_user_id',$user_id),
-                        $this->meta_key, 
-                        $attachment_id 
-                    );
-                }
-            }
+            $this->set_image($user_id,$form,$entry);
 
         },10,5);
 
+        add_action( 'gform_user_updated', function($user_id, $user_config, $entry, $user_pass, $form){
+
+            $this->set_image($user_id,$form,$entry);
+
+        },10,5);
 
         add_filter( 'get_avatar', function($avatar, $user_id, $size, $default, $alt){
 
