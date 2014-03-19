@@ -3,7 +3,6 @@ namespace TheFold\WordPress\GravityForms;
 use TheFold\WordPress\Import;
 use TheFold\WordPress\GravityForm;
 
-
 class Avatar{
 
     protected $meta_key;
@@ -17,33 +16,61 @@ class Avatar{
 
         $this->init_hooks();
     }
-// wp-content/plugins/emb-retailers/emb-retailers.php
+	
+    /**
+     * If using gravityforms user registration plugin, then this will return true
+     * when viewing a create user form. This is useful to know when to not show
+     * an avatar. i.e don't show one on create because they aren't going to have one yet.
+     */
+    function is_create_user_form($form_id){
+
+        if(!class_exists('\GFUser')){
+            return;
+        }
+
+        if($config = \GFUser::get_config($form_id))
+        {
+            return rgars($config, 'meta/feed_type') == 'create';    
+        }
+        
+        return false;
+    }
+
+
+    protected function set_image($user_id, $form, $entry) {
+        $gf = new GravityForm($form,$entry);
+
+        if($file_path = $gf->getValue($this->gform_field))  {
+
+            if($attachment_id = Import::create_attachment($file_path)) {
+
+                update_user_meta( 
+                    $user_id,
+                    $this->meta_key, 
+                    $attachment_id 
+                );
+            }
+        }
+    }
 
     protected function init_hooks()
     {
 
-        add_action( 'gform_after_submission', function($entry, $form){
+        add_action( 'gform_user_registered', function($user_id, $user_config, $entry, $user_pass, $form){
 
-            $gf = new GravityForm($form,$entry);
+            $this->set_image($user_id,$form,$entry);
 
-            if($file_path = $gf->getValue($this->gform_field)) {
-                    
-                if($attachment_id = Import::create_attachment($file_path)) {
+        },10,5);
 
-                    update_user_meta( 
-                        get_current_user_id(), 
-                        $this->meta_key, 
-                        $attachment_id 
-                    );
-                }
-            }
+        add_action( 'gform_user_updated', function($user_id, $user_config, $entry, $user_pass, $form){
 
-        },10,2);
+            $this->set_image($user_id,$form,$entry);
 
+        },10,5);
 
         add_filter( 'get_avatar', function($avatar, $user_id, $size, $default, $alt){
 
-            $key = "$user_id:".serialize($size);
+            $key = serialize($user_id).":".serialize($size);
 
             if($cache = get_transient( $key )){
                 $avatar = $cache;
@@ -59,7 +86,7 @@ class Avatar{
 
                     if ($avatar && !$this->overide)
                         return $avatar;
-                    elseif ($attachment_id = get_user_meta($user_id, $this->meta_key, true))
+                    elseif ($attachment_id = get_user_meta($user_id, $this->meta_key, true)) {
 
                         if( is_numeric($size) && $data = image_get_intermediate_size($attachment_id,array($size,$size))){
 
@@ -69,13 +96,21 @@ class Avatar{
                                 $data['url'] = path_join( dirname($file_url), $data['file'] );
                             }
 
-                            $avatar = "<img src='{$data['url']}' class='avatar' />";
+                            $avatar = "<img src='{$data['url']}' class='avatar' width='$size' />";
 
                         }else{
-                            $avatar = wp_get_attachment_image($attachment_id,array($size,$size));
-                        }
 
-                    set_transient( $key, $avatar, 14400);
+                            $image = wp_get_attachment_image_src($attachment_id, $size, $icon);
+                            if ( $image ) {
+                                list($src, $width, $height) = $image;
+
+                                $avatar = "<img src='{$src}' class='avatar' />";
+                            }
+                        }
+                        
+                        set_transient( $key, $avatar, 14);
+
+                    }
                 }
             }
 
@@ -86,20 +121,34 @@ class Avatar{
 
         add_filter( 'gform_field_content',function($field_content,$field,$value,$lead_id,$form_id){
 
-            if($field['adminLabel'] == $this->gform_field && !is_admin()){
+            if( ($field['adminLabel'] == $this->gform_field || $field['cssClass'] == $this->gform_field ) && !is_admin()){
 
                 $field_id = $field['id'];
                 $description = $field['description'];
-                $avatar = get_avatar(get_current_user_id());
+                $avatar = '';
+
+                    //don't show avatars when first creating a user
+                if( ! $this->is_create_user_form($form_id)) {
+                    $avatar = get_avatar(apply_filters('ecefolio_gform_profile_user_id',get_current_user_id()));
+                }
+
                 $label = $field['label'];
 
                 $field_content = "
                     <label class='gfield_label' for='input_{$form_id}_{$field_id}'>$label</label>
-                    <div class='gfield_description'>$description</div>
+
                     <div class='ginput_container'>
-                    <input name='input_{$field_id}' id='input_{$form_id}_{$field_id}' type='file' value='' size='20' class='gform_hidden medium'  /> 
-                    <span class='ginput_preview'>$avatar | <a href='javascript:;' onclick='gformDeleteUploadedFile({$form_id}, {$field_id});'>delete</a></span>
-                    </div>";
+                        <input name='input_{$field_id}' id='input_{$form_id}_{$field_id}' type='file' value='' size='20' class='". (($avatar) ? "gform_hidden" : "") ." medium'  />";
+                
+                if($avatar){
+                    $field_content .= "
+                    <span class='ginput_preview'>$avatar | <a href='javascript:;' onclick='gformDeleteUploadedFile({$form_id}, {$field_id});'>delete</a></span> ";
+                }
+
+                $field_content .="
+                    </div>
+
+                    <div class='gfield_description'>$description</div> ";
 
             }
 
@@ -117,11 +166,11 @@ class Avatar{
                     'fields' => array (
                         array (
                             'key' => 'field_51f8aa8c1a2ec',
-                            'label' => 'Avatar',//hack for ecomail
+                            'label' => 'Avatar',
                             'name' => 'avatar_attachment_id',
                             'type' => 'image',
                             'save_format' => 'id',
-                            'preview_size' => 'thumbnail',//hack for ecomail
+                            'preview_size' => 'thumbnail',
                             'library' => 'all',
                         ),
                     ),

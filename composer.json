@@ -1,7 +1,7 @@
 {
     "name": "thefold/lib",
     "type": "library",
-    "description": "Library for TheFold",
+    "description": "WordPress Library for TheFold",
     "keywords": ["wordpress","library","php"],
     "homepage": "http://www.thefold.co.nz",
     "license": "MIT",
@@ -12,11 +12,13 @@
                 "homepage": "http://www.thefold.co.nz",
                 "role": "Developer"
             }
-        ],
+    ],
     "require": {
-            "php": ">=5.4.0"
-        },
+        "php": ">=5.4.0",
+        "hybridauth/hybridauth": "dev-master",
+        "solarium/solarium": "3.1.2"
+    },
     "autoload": {
-            "psr-0": {"TheFold\\": "src/"}
-        }
+        "psr-0": {"TheFold\\": "src/"}
+    }
 }

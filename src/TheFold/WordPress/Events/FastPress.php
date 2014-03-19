@@ -3,9 +3,9 @@
 namespace TheFold\WordPress\Events;
 
 use TheFold\WordPress\Events;
-use TheFold\WordPress\Solr as SolrService;
+use TheFold\FastPress as FP;
 
-class Solr
+class FastPress
 {
     protected static $instance;
 
@@ -25,30 +25,30 @@ class Solr
     public static function events_by_speaker(\WP_Post $speaker, $params=[])
     {
         $default_params = [
-            'post_types' => Events::CPT_EVENT,
+            'post_type' => Events::CPT_EVENT,
             'fields'=>['speakers_p2p' => $speaker->ID],
             'sort' => ['starts_at_dt','desc'],
             ];
 
-       return SolrService::get_instance()->get_posts(array_merge($default_params,$params));
+       return FP::get_instance()->get_posts(array_merge($default_params,$params));
     }
 
     public static function speakers_by_event(\WP_Post $event, $params=[])
     {
         $default_params = [
-            'post_types' => Events::CPT_SPEAKER,
+            'post_type' => Events::CPT_SPEAKER,
             'fields'=>['events_p2p' => $event->ID],
             'sort' => ['starts_at_dt','desc'],
             'cache_key' => $cache ? __CLASS__.':'.__FUNCTION__.':'.$event->ID : null
             ];
 
-       return SolrService::get_instance()->get_posts(array_merge($default_params, $params));
+       return FP::get_instance()->get_posts(array_merge($default_params, $params));
     }
 
     public static function events_by_category($category_slug,$params=[])
     {
         $default_params = [
-            'post_types'=> Events::CPT_EVENT,
+            'post_type'=> Events::CPT_EVENT,
             'sort' => ['starts_at_dt','desc'],
             'fields' => [Events::CAT_EVENT.'_taxonomy'=>$category_slug]
         ];
@@ -58,23 +58,23 @@ class Solr
             unset($params['fields']);
         }
 
-        return SolrService::get_instance()->get_posts(array_merge_recursive($default_params, $params));
+        return FP::get_instance()->get_posts(array_merge_recursive($default_params, $params));
     }
 
     public static function related_events(\WP_Post $event,$params=[])
     {
         $default_params = [
-            'post_types' => Events::CPT_EVENT,
+            'post_type' => Events::CPT_EVENT,
             'fields'=>['related_events_p2p' => $event->ID],
             'sort' => ['starts_at_dt','desc']
             ];
 
-       return SolrService::get_instance()->get_posts(array_merge($default_params, $params));
+       return FP::get_instance()->get_posts(array_merge($default_params, $params));
     }
 
     public static function get_featured($params=[]) {
 
-        $solr = SolrService::get_instance();
+        $solr = FP::get_instance();
 
         $default_params = [
             'fields'=>[
@@ -92,7 +92,7 @@ class Solr
 
     protected function index_p2p_relations()
     {
-        add_filter('thefold_solr_post_mapping',function($post_mapping){
+        add_filter('fastpress_post_mapping',function($post_mapping){
 
             $post_mapping['speakers_p2p'] = function($event){
 
