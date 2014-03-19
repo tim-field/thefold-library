@@ -79,6 +79,8 @@ class Solr {
 
      $posts = $ids ? array_map( 'get_post', $ids ) : [];
 
+     update_post_caches($posts);
+
      if(!empty($params['cache_key'])){
         $this->cache_set($params['cache_key'],$posts);
      }
@@ -473,7 +475,7 @@ class Solr {
      $default_params = array(
          'nopaging'=>false,
          'page'=>1,
-         'per_page'=>5
+         'per_page'=> get_option('posts_per_page')
      );
 
      $params = array_merge($default_params, $params);
