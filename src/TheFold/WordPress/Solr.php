@@ -475,6 +475,7 @@ class Solr {
      $default_params = array(
          'nopaging'=>false,
          'page'=>1,
+         'rows'=>1000,
          'per_page'=> get_option('posts_per_page')
      );
 
