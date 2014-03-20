@@ -574,10 +574,11 @@ class Solr {
          $query->addSorts($sorts);
      }
 
-     if(isset($params['rows'])){
+     
+     if($params['nopaging']) {
          $query->setRows($params['rows']);
      }
-     elseif(!$params['nopaging']) {
+     else {
          $query->setStart( ($params['page']-1) * $params['per_page'] )->setRows($params['per_page']);
      }
 
