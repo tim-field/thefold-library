@@ -36,6 +36,11 @@ class FastPress implements Engine
         return $this->engine->index_post($post);
     }
 
+    function index_user(\WP_User $user)
+    {
+        return $this->engine->index_user($user);
+    }
+
     function get_posts($args=[]){
    
         $defaults = [

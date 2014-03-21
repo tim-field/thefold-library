@@ -4,6 +4,8 @@ namespace TheFold\FastPress;
 interface Engine {
 
     function index_post(\WP_Post $post);    
+    
+    function index_user(\WP_User $user);    
 
     function get_posts($args=[]);    
 

@@ -20,10 +20,34 @@ jQuery(document).ready(function($) {
         $.post(ajaxurl, data, function(response) {
 
             if (response.done) {
-                $('#thefold_solr_index').text('Update Complete');
+                
+                $('#thefold_solr_index').text('Post Index Complete');
+
+                index_users(0);
+
             } else if (response.page) {
                 index(response.page);
-                $('#thefold_solr_index').text('Updating: '+response.percent+'%');
+                $('#thefold_solr_index').text('Indexing Posts: '+response.percent+'%');
+            }
+        });
+    }
+    
+    function index_users(page){
+
+        var data = {
+            action: '<?=TheFold\FastPress\Admin::AJAX_INDEX_USERS?>',
+            page: page
+        };
+
+        $.post(ajaxurl, data, function(response) {
+
+            if (response.done) {
+                
+                $('#thefold_solr_index').text('Index Complete');
+
+            } else if (response.page) {
+                index_users(response.page);
+                $('#thefold_solr_index').text('Indexing Users: '+response.percent+'%');
             }
         });
     }
