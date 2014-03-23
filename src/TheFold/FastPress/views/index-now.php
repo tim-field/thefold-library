@@ -1,5 +1,6 @@
 <fieldset>
     <button id="thefold_solr_index" type="button">Update Index</button><br/>
+    <button id="thefold_solr_user_index" type="button">Update User Index</button><br/>
     <button id="thefold_solr_delete_all" type="button">Delete All</button>
 </fieldset>
 
@@ -8,6 +9,10 @@ jQuery(document).ready(function($) {
 
     $('#thefold_solr_index').click(function() {
        index(0);
+    });
+   
+    $('#thefold_solr_user_index').click(function() {
+       index_users(0);
     });
 
     function index(page){
