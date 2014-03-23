@@ -222,6 +222,18 @@ class Solr implements Engine{
      return in_array($status, (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_status','publish'));
  }
 
+ protected function valid_role($roles){
+
+    foreach($roles as $role){
+
+        if ( in_array($role, (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'user_roles')) ){
+            return true;
+        }
+    }
+
+    return false;
+ }
+
  protected function proccess_pending()
  {
      if(empty($this->pending_updates))
@@ -756,6 +768,10 @@ class Solr implements Engine{
  {
      if($object instanceof \WP_Post){
         return $this->valid_status($object->post_status);
+     }
+
+     if($object instanceof \WP_User){
+        return $this->valid_role($object->roles);
      }
      
      return true;
