@@ -149,7 +149,12 @@ class FastPress implements Engine
         return $this->engine->get_count();
     }
 
+    //bad name
     function get_next_posts_link($label = null) {
+        return get_next_page_link($label);
+    }
+
+    function get_next_page_link($label=null) {
 
         if ( null === $label )
 		$label = __( 'Next Page &raquo;' );
@@ -161,6 +166,11 @@ class FastPress implements Engine
     }
 
     function get_previous_posts_link($label = null) {
+        
+        return get_previous_page_link($lable);
+    }
+
+    function get_previous_page_link($label = null) {
 
         if ( null === $label )
             $label = __( '&laquo; Previous Page' );

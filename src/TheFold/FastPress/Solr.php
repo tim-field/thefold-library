@@ -680,12 +680,21 @@ class Solr implements Engine{
 
      foreach($this->facets(true) as $facet => $tag) {
 
-         if(!empty($params['facets'][$facet])) {
+         $value = null;  
 
+         if(!empty($params['facets'][$facet])) {
+            $value = $params['facets'][$facet];
+         }
+         //Auto pull from get if avaiable. Hacky? Useful tho
+         elseif(!empty($_GET[$facet])){ 
+            $value = urldecode($_GET[$facet]);
+         }
+
+         if(!is_null($value)) {
              $query->addFilterQuery([
                  'field'=>$facet,
                  'key'=>$facet,
-                 'query'=> $this->create_query_string($facet, $params['facets'][$facet]),
+                 'query'=> $this->create_query_string($facet, $value),
                  'tag' => $tag,
              ]);
          }
@@ -821,11 +830,13 @@ class Solr implements Engine{
  public function get_solr_id($wp_id, $class='WP_Post')
  {
     if($class == 'WP_Post'){ 
-        // class not added, this is legacy support for posts indexed before users added.
         return $wp_id.':'.get_current_blog_id();  
     }
+    elseif ($class== 'WP_User') {
+        return $wp_id.':'.$class;
+    }
     else {
-        return $wp_id.':'.$class.':'.get_current_blog_id();
+        throw new \Exception('Don\'t know how to index class '.$class);
     }
  }
 
