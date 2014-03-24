@@ -48,11 +48,11 @@ jQuery(document).ready(function($) {
 
             if (response.done) {
                 
-                $('#thefold_solr_index').text('Index Complete');
+                $('#thefold_solr_user_index').text('Index Complete');
 
             } else if (response.page) {
                 index_users(response.page);
-                $('#thefold_solr_index').text('Indexing Users: '+response.percent+'%');
+                $('#thefold_solr_user_index').text('Indexing Users: '+response.percent+'%');
             }
         });
     }

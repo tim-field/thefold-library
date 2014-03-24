@@ -115,7 +115,7 @@ class Solr implements Engine{
     return gmdate('Y-m-d\TH:i:s\Z', is_numeric($thedate) ? $thedate : strtotime($thedate)); 
  }
 
- //interface
+  //interface
  function get_posts($params=[])
  {
      $params = array_merge([
@@ -160,6 +160,34 @@ class Solr implements Engine{
 
      return $posts;
  }
+
+ //interface
+ function get_users($params=[])
+ {
+     $params = array_merge([
+         'wp_class' =>'WP_User'
+         ],$params
+     );
+
+     $users = [];
+     $ids= [];
+
+     $resultset = $this->get_resultset($params,false);
+     
+     $this->result_count = $resultset->getNumFound();
+     
+     foreach($resultset as $document){
+
+         $fields = $document->getFields();
+         $users[] = $this->init_wp_user($fields);
+         $ids[] = $fields['id']; 
+     }
+
+     cache_users($ids);
+
+     return $users;
+ }
+
 
 
  function get_facet($name, $qparams=null, $reuse=true)
@@ -329,12 +357,25 @@ class Solr implements Engine{
             },
 
             'id' => 'ID',
+
             'caps' => 'caps',
             'cap_key' => 'cap_key',
             'roles' => 'roles',
-            //'allcaps' => 'allcaps',
-            'first_name' => 'first_name',
-            'last_name' => 'last_name',
+
+            //users
+            'user_login' => 'user_login',
+            'user_nicename' => 'user_nicename',
+            'user_email' => 'user_email',
+            'user_url' => 'user_url',
+            'display_name' => 'display_name',
+
+            //meta
+            'user_firstname' => 'user_firstname',
+            'user_lastname' => 'user_lastname',
+            'description' => 'description',
+            'nickname' => 'nickname',
+            'source_domain' => 'source_domain',
+
             'wp_class' => function($user){
                 return 'WP_User';
             }
@@ -602,7 +643,7 @@ class Solr implements Engine{
         $query->setQuery($params['query']);
      }
 
-     if(!isset($params['blogid']) && is_multisite())
+     if(!isset($params['blogid']) && is_multisite() && $params['wp_class'] != 'WP_User')
      {
         $params['fields']['blogid'] = get_current_blog_id();
      }
@@ -818,6 +859,20 @@ class Solr implements Engine{
      unset($safe_fields['id']);
 
      return new \WP_Post((object)$safe_fields);
+ }
+
+ protected function init_wp_user($fields)
+ {
+     $safe_fields = [];
+
+     foreach($fields as $field => $value) {
+         $safe_fields[ strtolower(str_replace('-','_',$field)) ] = $value;
+     }
+
+     $safe_fields['ID'] = $fields['id'];
+     unset($safe_fields['id']);
+
+     return new \WP_User((object)$safe_fields);
  }
 
 }

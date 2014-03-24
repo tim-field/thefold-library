@@ -7,7 +7,9 @@ interface Engine {
     
     function index_user(\WP_User $user);    
 
-    function get_posts($args=[]);    
+    function get_posts($args=[]);
+    
+    function get_users($args=[]);
 
     function delete_post($post_id);    
 

@@ -61,6 +61,11 @@ class FastPress implements Engine
         return $this->engine->get_posts($args);
     }
 
+    function get_users($args=[])
+    {
+        return $this->engine->get_users($args);
+    }
+
     function query_posts($args)
     {
         $this->posts = $this->get_posts($args);
