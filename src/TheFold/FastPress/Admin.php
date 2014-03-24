@@ -140,10 +140,7 @@ class Admin
                     $user_count = count_users(); //todo cache this
 
                     foreach($roles as $role){
-                        foreach($user_count as $role_count)
-                        {
-                            $total += $role_count[$role];
-                        }
+                        $total += $user_count['avail_roles'][$role];
                     }
                     
                     set_transient( 'fastpress_index_user_count', $total, 240 );
@@ -166,12 +163,12 @@ class Admin
                         $params['role'] = current($role);
                     } else {
 
-                        //slow
-                        $params['meta_query'] = [
+                        //slow, but as fast as possible.
+                        $params['meta_query'] = [[
                             'key' => $wpdb->get_blog_prefix(get_current_blog_id()) . 'capabilities',
-                                'value' => '"(' . implode('|', array_map('preg_quote', $roles)) . ')"',
-                                'compare' => 'REGEXP'
-                        ];
+                            'value' => '"(' . implode('|', array_map('preg_quote', $roles)) . ')"',
+                            'compare' => 'REGEXP'
+                        ]];
                     }
 
                     $users = get_users($params);
