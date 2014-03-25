@@ -118,9 +118,9 @@ class FastPress implements Engine
         return $this->engine->delete_post($post_id);
     }
 
-    function delete_all()
+    function delete_all($query=null)
     {
-        return $this->engine->delete_all(); 
+        return $this->engine->delete_all($query);
     }
 
     function admin_init()

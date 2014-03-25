@@ -192,13 +192,16 @@ class Admin
 
             add_action('wp_ajax_'.self::AJAX_DELETE_ALL, function() {
 
-                $result = \FastPress\delete_all();
+                $query = empty($_POST['query']) ? null : $_POST['query'];
+
+                $result = \FastPress\delete_all($query);
 
                 wp_send_json([
                     'status'=>$result->getStatus(),
-                        'time'=>$result->getQueryTime()
-                        ]);
+                    'time'=>$result->getQueryTime()
+                ]);
             });
+           
         });
 
     }

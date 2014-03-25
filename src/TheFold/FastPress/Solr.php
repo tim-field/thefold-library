@@ -321,16 +321,21 @@ class Solr implements Engine{
  }
 
 
- public function delete_all()
+ public function delete_all($query = null)
  {
      $update = $this->get_update_document();
      
-     if(is_multisite()) {
-         $update->addDeleteQuery('blogid:'.get_current_blog_id());
+     if(empty($query)){
 
-     } else {
-         $update->addDeleteQuery('*:*');
+         if(is_multisite()) {
+             $query = 'blogid:'.get_current_blog_id();
+
+         } else {
+             $query = '*:*';
+         }
      }
+     
+     $update->addDeleteQuery($query);
 
      $update->addCommit();
      

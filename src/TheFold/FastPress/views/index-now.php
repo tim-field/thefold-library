@@ -1,6 +1,7 @@
 <fieldset>
     <button id="thefold_solr_index" type="button">Update Index</button><br/>
     <button id="thefold_solr_user_index" type="button">Update User Index</button><br/>
+    <button id="thefold_solr_delete_all_users" type="button">Delete Users</button><br/>
     <button id="thefold_solr_delete_all" type="button">Delete All</button>
 </fieldset>
 
@@ -58,17 +59,26 @@ jQuery(document).ready(function($) {
     }
     
     $('#thefold_solr_delete_all').click(function() {
+        delete_all($(this)); 
+    });
+   
+    $('#thefold_solr_delete_all_users').click(function() {
+        delete_all($(this), 'wp_class:WP_User'); 
+    });
 
+    function delete_all(button, query)
+    {
         var data = {
-            action: '<?=TheFold\FastPress\Admin::AJAX_DELETE_ALL?>'
-        }, button = $(this);
+            action: '<?=TheFold\FastPress\Admin::AJAX_DELETE_ALL?>',
+            query: query
+        }
 
-        if(confirm('Delete all items in the index ?')) {
+        if(confirm('Delete users in the index ?')) {
 
             $.post(ajaxurl, data, function(response) {
                 button.text('Deleted All');
             });
         }
-    });
+    }
 });
 </script>

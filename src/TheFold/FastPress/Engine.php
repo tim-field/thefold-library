@@ -13,7 +13,7 @@ interface Engine {
 
     function delete_post($post_id);    
 
-    function delete_all();
+    function delete_all($query=null);
 
     function admin_init();    
 
