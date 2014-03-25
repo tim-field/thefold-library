@@ -160,7 +160,7 @@ class Admin
 
                     if(count($roles) <= 1){
 
-                        $params['role'] = current($role);
+                        $params['role'] = current($roles);
                     } else {
 
                         //slow, but as fast as possible.
