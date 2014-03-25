@@ -151,7 +151,7 @@ class FastPress implements Engine
 
     //bad name
     function get_next_posts_link($label = null) {
-        return get_next_page_link($label);
+        return $this->get_next_page_link($label);
     }
 
     function get_next_page_link($label=null) {
@@ -167,7 +167,7 @@ class FastPress implements Engine
 
     function get_previous_posts_link($label = null) {
         
-        return get_previous_page_link($lable);
+        return $this->get_previous_page_link($lable);
     }
 
     function get_previous_page_link($label = null) {
