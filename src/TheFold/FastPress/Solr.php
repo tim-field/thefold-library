@@ -408,9 +408,7 @@ class Solr implements Engine{
              },
 
              'id' => 'ID',
-             'post_author' => function($post){
-                return get_userdata( $post->post_author )->display_name;
-             },
+             'post_author' => $post->post_author,
              'post_name' => 'post_name',
              'post_type' => 'post_type',
              'post_title' => 'post_title',
@@ -441,9 +439,6 @@ class Solr implements Engine{
              'post_mime_type' => 'post_mime_type',
              'permalink' => function($post){
                 return get_permalink($post->ID);
-             },
-             'author_id' => function($post) {
-                return $post->post_author;
              },
              'wp_class' => function($post){
                 return 'WP_Post';
