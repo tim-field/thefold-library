@@ -26,8 +26,10 @@ class Solr implements Engine{
  protected $pending_updates = [];
  protected $pending_deletes = [];
  protected $post_mapping = null;
+ protected $user_mapping = null;
+ protected $mapping = null;
  protected $with_facets = false;
- protected $core_fields = [
+ protected $core_post_fields = [
          'ID',
          'id',
          'post_author',
@@ -85,10 +87,17 @@ class Solr implements Engine{
      return false; 
  }
 
+ function index_user(\WP_User $user)
+ {
+    $this->update_user($user);
+
+    return true;
+ }
+
  //interface
  function delete_post($post_id)
  {
-    $solr_id = $this->get_solr_id($post_id);
+    $solr_id = $this->get_solr_id($post_id,'WP_Post');
 
     $this->pending_deletes[$solr_id] = true;
 
@@ -106,9 +115,14 @@ class Solr implements Engine{
     return gmdate('Y-m-d\TH:i:s\Z', is_numeric($thedate) ? $thedate : strtotime($thedate)); 
  }
 
- //interface
+  //interface
  function get_posts($params=[])
  {
+     $params = array_merge([
+         'wp_class' =>'WP_Post'
+         ],$params
+     );
+
      if(!empty($params['cache_key']))
      {
          $posts = $this->cache_get($params['cache_key']);
@@ -146,6 +160,34 @@ class Solr implements Engine{
 
      return $posts;
  }
+
+ //interface
+ function get_users($params=[])
+ {
+     $params = array_merge([
+         'wp_class' =>'WP_User'
+         ],$params
+     );
+
+     $users = [];
+     $ids= [];
+
+     $resultset = $this->get_resultset($params,false);
+     
+     $this->result_count = $resultset->getNumFound();
+     
+     foreach($resultset as $document){
+
+         $fields = $document->getFields();
+         $users[] = $this->init_wp_user($fields);
+         $ids[] = $fields['id']; 
+     }
+
+     cache_users($ids);
+
+     return $users;
+ }
+
 
 
  function get_facet($name, $qparams=null, $reuse=true)
@@ -195,7 +237,12 @@ class Solr implements Engine{
 
  public function update_post(\WP_Post $post)
  {
-     $this->pending_updates[$this->get_solr_id($post->ID)] = [ 'ID' => $post->ID, 'blog_id' => get_current_blog_id() ];
+     $this->pending_updates[$this->get_solr_id($post->ID,'WP_Post')] = [ 'ID' => $post->ID, 'blog_id' => get_current_blog_id(), 'class'=> 'WP_Post' ];
+ }
+
+ public function update_user(\WP_User $user)
+ {
+    $this->pending_updates[$this->get_solr_id($user->ID,'WP_User')] = ['ID' =>$user->ID, 'blog_id' => get_current_blog_id(), 'class'=> 'WP_User'];
  }
 
  protected function valid_status($status){
@@ -203,12 +250,24 @@ class Solr implements Engine{
      return in_array($status, (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_status','publish'));
  }
 
+ protected function valid_role($roles){
+
+    foreach($roles as $role){
+
+        if ( in_array($role, (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'user_roles')) ){
+            return true;
+        }
+    }
+
+    return false;
+ }
+
  protected function proccess_pending()
  {
      if(empty($this->pending_updates))
         return;
 
-     $mapping = $this->get_post_mapping();
+     $mapping = $this->get_mapping();
     
      if (!$mapping) {
          throw new \Exception('No post mapping data. Is your filter returning ?');
@@ -217,28 +276,30 @@ class Solr implements Engine{
      foreach($this->pending_updates as $solr_id => $data)
      { 
          $post_id = $data['ID'];
+         $id = $data['ID'];
          $blog_id = $data['blog_id'];
+         $class = $data['class'];
 
+         //this probably isn't needed unless this function was called outside of page rendering
          if ( $blog_id && is_multisite() ){
              switch_to_blog($blog_id);
          }
 
-         $post = get_post($post_id);
+         $object = $this->init_wp_object($id,$class);
 
-         if( $post && $this->valid_status($post->post_status))
+         if( $object && $this->ok_to_index($object))
          {
-             $solr_post = $this->get_update_post_document();
-             $author = get_userdata( $post->post_author );
+             $solr_post = $this->get_document();
 
-             foreach ($mapping as $solr_field => $wp_post_field) {
+             foreach ($mapping[$class] as $solr_field => $wp_field) {
 
                  $value = null;
 
-                 if (is_string($wp_post_field)) {
-                     $value = $post->$wp_post_field;
+                 if (is_string($wp_field)) {
+                     $value = $object->$wp_field;
                  }
-                 elseif (is_callable($wp_post_field)){
-                     $value = $wp_post_field($post, $author, $blog_id);
+                 elseif (is_callable($wp_field)){
+                     $value = $wp_field($object, $blog_id);
                  }
 
                  if(!is_null($value)){
@@ -246,9 +307,7 @@ class Solr implements Engine{
                  }
              }
 
-             //error_log('updating post with solr '.$post->ID." to blog ".(get_current_blog_id())."\n",3,'/tmp/thefold-solr.log');
-
-             $this->pending_updates[$solr_id] = apply_filters('thefold_fastpress_update_post', $solr_post, $post);
+             $this->pending_updates[$solr_id] = apply_filters('thefold_fastpress_update_'.($class == 'WP_Post' ? 'post' : 'user'), $solr_post, $object);
 
          }
          else{
@@ -262,20 +321,77 @@ class Solr implements Engine{
  }
 
 
- public function delete_all()
+ public function delete_all($query = null)
  {
      $update = $this->get_update_document();
      
-     if(is_multisite()) {
-         $update->addDeleteQuery('blogid:'.get_current_blog_id());
+     if(empty($query)){
 
-     } else {
-         $update->addDeleteQuery('*:*');
+         if(is_multisite()) {
+             $query = 'blogid:'.get_current_blog_id();
+
+         } else {
+             $query = '*:*';
+         }
      }
+     
+     $update->addDeleteQuery($query);
 
      $update->addCommit();
      
      return $this->get_client()->update($update);
+ }
+
+ public function get_mapping()
+ {
+    $this->mapping['WP_Post'] = $this->get_post_mapping();
+    $this->mapping['WP_User'] = $this->get_user_mapping();
+
+    return $this->mapping;
+ }
+
+ public function get_user_mapping()
+ {
+
+    if(!$this->user_mapping){
+    
+        $this->user_mapping = [
+            
+            'solr_id' => function($user){
+                return $this->get_solr_id($user->ID,'WP_User');
+            },
+
+            'id' => 'ID',
+
+            'caps' => 'caps',
+            'cap_key' => 'cap_key',
+            'roles' => 'roles',
+
+            //users
+            'user_login' => 'user_login',
+            'user_nicename' => 'user_nicename',
+            'user_email' => 'user_email',
+            'user_url' => 'user_url',
+            'display_name' => 'display_name',
+
+            //meta
+            'user_firstname' => 'user_firstname',
+            'user_lastname' => 'user_lastname',
+            'description' => 'description',
+            'nickname' => 'nickname',
+            'source_domain' => 'source_domain',
+
+            'wp_class' => function($user){
+                return 'WP_User';
+            }
+        ];
+
+        //If you want anymore use the hook. Meta fields is a can of worms
+        
+        $this->user_mapping = apply_filters('fastpress_user_mapping', $this->user_mapping);
+    }
+
+    return $this->user_mapping;
  }
 
  public function get_post_mapping()
@@ -285,33 +401,25 @@ class Solr implements Engine{
          $this->post_mapping = [
 
              'solr_id' => function($post){
-                return $this->get_solr_id($post->ID);
+                return $this->get_solr_id($post->ID,'WP_Post');
              },
-             'blogid' => function($post_id,$author){
+             'blogid' => function($post){
                 return get_current_blog_id();
              },
 
              'id' => 'ID',
-             'post_author' => function($post,$author){
-                return $author->display_name;
-             },
+             'post_author' => 'post_author',
              'post_name' => 'post_name',
              'post_type' => 'post_type',
-             'post_title' => function($post) {
-                return apply_filters('the_title',$post->post_title);
-             },
+             'post_title' => 'post_title',
              'post_date' => function($post) {
                 return $this->format_date($post->post_date);
              },
              'post_date_gmt' => function($post) {
                 return $this->format_date($post->post_date_gmt);
              },
-             'post_content' => function($post) {
-                return $post->post_content ?: null;
-             },
-             'post_excerpt' => function($post) {
-	        return $this->post_excerpt ?: null;
-             },
+             'post_content' => 'post_content',
+             'post_excerpt' => 'post_excerpt',
              'post_status' => 'post_status',
              'comment_status' => function($post) {
                 return $post->comment_status == 'open' ? true : false;
@@ -332,9 +440,9 @@ class Solr implements Engine{
              'permalink' => function($post){
                 return get_permalink($post->ID);
              },
-             'author_id' => function($post, $author) {
-                return $author->ID;
-             },
+             'wp_class' => function($post){
+                return 'WP_Post';
+             }
 
          ];
             
@@ -409,7 +517,7 @@ class Solr implements Engine{
 
     $taxonomies = WordPress::get_option(FastPress::SETTING_NAMESPACE,'taxonomies');
 
-    foreach($taxonomies as $name) {
+    if($taxonomies) foreach($taxonomies as $name) {
 
         $taxonomie = get_taxonomy($name);
 
@@ -497,7 +605,7 @@ class Solr implements Engine{
      return $result;
  }
 
- protected function get_update_post_document()
+ protected function get_document()
  {
     return $this->get_update_document()->createDocument();
  }
@@ -516,6 +624,7 @@ class Solr implements Engine{
      $default_params = [
          'nopaging' => false,
          'page' => 1,
+         'rows' => 1000,
          'with_facets' => $this->with_facets
      ];
 
@@ -534,7 +643,7 @@ class Solr implements Engine{
         $query->setQuery($params['query']);
      }
 
-     if(!isset($params['blogid']) && is_multisite())
+     if(!isset($params['blogid']) && is_multisite() && $params['wp_class'] != 'WP_User')
      {
         $params['fields']['blogid'] = get_current_blog_id();
      }
@@ -552,11 +661,15 @@ class Solr implements Engine{
          $query->createFilterQuery('daterange')->setQuery("$date_field:[$from_date TO $to_date]");
      }
 
+     if(isset($params['wp_class'])){
+        $query->createFilterQuery('wp_class')->setQuery('wp_class:'.$params['wp_class']);
+     }
+
      if(isset($params['post_types'])) {
          $query->createFilterQuery('posttype')->setQuery('type:('.implode(' OR ',(array) $params['post_types']).')');
      }
 
-     $params['fields'] = array_merge(array_intersect_key($params,array_flip($this->core_fields)), (array) $params['fields']);
+     $params['fields'] = array_merge(array_intersect_key($params,array_flip($this->core_post_fields)), (array) $params['fields']);
 
      if(!empty($params['fields'])) {
         
@@ -567,12 +680,21 @@ class Solr implements Engine{
 
      foreach($this->facets(true) as $facet => $tag) {
 
-         if(!empty($params['facets'][$facet])) {
+         $value = null;  
 
+         if(!empty($params['facets'][$facet])) {
+            $value = $params['facets'][$facet];
+         }
+         //Auto pull from get if avaiable. Hacky? Useful tho
+         elseif(!empty($_GET[$facet])){ 
+            $value = urldecode($_GET[$facet]);
+         }
+
+         if(!is_null($value)) {
              $query->addFilterQuery([
                  'field'=>$facet,
                  'key'=>$facet,
-                 'query'=> $this->create_query_string($facet, $params['facets'][$facet]),
+                 'query'=> $this->create_query_string($facet, $value),
                  'tag' => $tag,
              ]);
          }
@@ -604,20 +726,19 @@ class Solr implements Engine{
 
          $sorts[$sort] = strtolower($sort_type);
      }
-     elseif(!isset($params['query'])) {
+     elseif(!isset($params['query']) && $params['wp_class'] == 'WP_Post') {
          //if not a search query, default to post date sort
-
-         $sorts['post_date'] = $query::SORT_DESC;
+        $sorts['post_date'] = $query::SORT_DESC;
      }
 
      if($sorts) {
          $query->addSorts($sorts);
      }
 
-     if(isset($params['rows'])){
+     if($params['nopaging']) {
          $query->setRows($params['rows']);
      }
-     elseif(!$params['nopaging']) {
+     else {
          $query->setStart( ($params['page']-1) * $params['posts_per_page'] )->setRows($params['posts_per_page']);
      }
 
@@ -676,9 +797,47 @@ class Solr implements Engine{
      return $field.':("'.implode('" "', (array) $value).'")';
  }
 
- public function get_solr_id($post_id)
+ protected function init_wp_object($id,$class){
+
+    switch($class){
+    
+        case 'WP_User':
+            return get_userdata($id);
+
+        case 'WP_Post':
+            return get_post($id);
+    }  
+
+    throw new Exception('Unknown class '.$class);
+ }
+
+ /**
+  * Return true if we should index this object 
+  */
+ protected function ok_to_index($object)
  {
-    return $post_id.':'.get_current_blog_id();
+     if($object instanceof \WP_Post){
+        return $this->valid_status($object->post_status);
+     }
+
+     if($object instanceof \WP_User){
+        return $this->valid_role($object->roles);
+     }
+     
+     return true;
+ }
+
+ public function get_solr_id($wp_id, $class='WP_Post')
+ {
+    if($class == 'WP_Post'){ 
+        return $wp_id.':'.get_current_blog_id();  
+    }
+    elseif ($class== 'WP_User') {
+        return $wp_id.':'.$class;
+    }
+    else {
+        throw new \Exception('Don\'t know how to index class '.$class);
+    }
  }
 
  public function registerPlugin($name, $object)
@@ -695,11 +854,6 @@ class Solr implements Engine{
  //take returned solr fields and return a wp post object
  protected function init_wp_post($fields)
  {
-     /**
-      * Todo fix this
-      $fields['post_date'] = date('Y-m-d H:i:s',strtotime($fields['post_date']));
-     $fields['post_date_gmt'] = date('Y-m-d H:i:s',strtotime($fields['post_date_gmt']));
-      */
      $fields['post_date'] = date('Y-m-d H:i:s', strtotime($fields['post_date']));
      $fields['post_date_gmt'] = date('Y-m-d H:i:s', strtotime($fields['post_date_gmt']));
      
@@ -716,6 +870,20 @@ class Solr implements Engine{
      unset($safe_fields['id']);
 
      return new \WP_Post((object)$safe_fields);
+ }
+
+ protected function init_wp_user($fields)
+ {
+     $safe_fields = [];
+
+     foreach($fields as $field => $value) {
+         $safe_fields[ strtolower(str_replace('-','_',$field)) ] = $value;
+     }
+
+     $safe_fields['ID'] = $fields['id'];
+     unset($safe_fields['id']);
+
+     return new \WP_User((object)$safe_fields);
  }
 
 }

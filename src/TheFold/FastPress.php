@@ -36,6 +36,11 @@ class FastPress implements Engine
         return $this->engine->index_post($post);
     }
 
+    function index_user(\WP_User $user)
+    {
+        return $this->engine->index_user($user);
+    }
+
     function get_posts($args=[]){
    
         $defaults = [
@@ -54,6 +59,11 @@ class FastPress implements Engine
         $this->paging_links = null;
 
         return $this->engine->get_posts($args);
+    }
+
+    function get_users($args=[])
+    {
+        return $this->engine->get_users($args);
     }
 
     function query_posts($args)
@@ -108,9 +118,9 @@ class FastPress implements Engine
         return $this->engine->delete_post($post_id);
     }
 
-    function delete_all()
+    function delete_all($query=null)
     {
-        return $this->engine->delete_all(); 
+        return $this->engine->delete_all($query);
     }
 
     function admin_init()
@@ -139,7 +149,12 @@ class FastPress implements Engine
         return $this->engine->get_count();
     }
 
+    //bad name
     function get_next_posts_link($label = null) {
+        return $this->get_next_page_link($label);
+    }
+
+    function get_next_page_link($label=null) {
 
         if ( null === $label )
 		$label = __( 'Next Page &raquo;' );
@@ -151,6 +166,11 @@ class FastPress implements Engine
     }
 
     function get_previous_posts_link($label = null) {
+        
+        return $this->get_previous_page_link($lable);
+    }
+
+    function get_previous_page_link($label = null) {
 
         if ( null === $label )
             $label = __( '&laquo; Previous Page' );
