@@ -408,7 +408,7 @@ class Solr implements Engine{
              },
 
              'id' => 'ID',
-             'post_author' => 'post_author',
+             'post_author' => 'post_author', //This is the users id
              'post_name' => 'post_name',
              'post_type' => 'post_type',
              'post_title' => 'post_title',
