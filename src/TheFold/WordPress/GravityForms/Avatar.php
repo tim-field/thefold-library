@@ -56,12 +56,14 @@ class Avatar{
     protected function init_hooks()
     {
 
+        //Note the form argument won't be passed unless you hack the registration plugin
         add_action( 'gform_user_registered', function($user_id, $user_config, $entry, $user_pass, $form){
 
             $this->set_image($user_id,$form,$entry);
 
         },10,5);
 
+        //Note the form argument won't be passed unless you hack the registration plugin
         add_action( 'gform_user_updated', function($user_id, $user_config, $entry, $user_pass, $form){
 
             $this->set_image($user_id,$form,$entry);

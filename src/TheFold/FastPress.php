@@ -118,6 +118,11 @@ class FastPress implements Engine
         return $this->engine->delete_post($post_id);
     }
 
+    function delete_user($user_id)
+    {
+        return $this->engine->delete_user($user_id);
+    }
+
     function delete_all($query=null)
     {
         return $this->engine->delete_all($query);

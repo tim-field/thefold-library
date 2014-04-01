@@ -104,6 +104,15 @@ class Solr implements Engine{
     unset($this->pending_updates[$solr_id]);
  }
 
+ function delete_user($user_id)
+ {
+    $solr_id = $this->get_solr_id($user_id,'WP_User');
+
+    $this->pending_deletes[$solr_id] = true;
+
+    unset($this->pending_updates[$solr_id]);
+ }
+
  //interface
  function set_facets($facets=[])
  {

@@ -11,7 +11,9 @@ interface Engine {
     
     function get_users($args=[]);
 
-    function delete_post($post_id);    
+    function delete_post($post_id);
+    
+    function delete_user($user_id);
 
     function delete_all($query=null);
 
