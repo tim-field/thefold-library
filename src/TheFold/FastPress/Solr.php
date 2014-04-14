@@ -128,7 +128,8 @@ class Solr implements Engine{
  function get_posts($params=[])
  {
      $params = array_merge([
-         'wp_class' =>'WP_Post'
+         'wp_class' =>'WP_Post',
+         'post_type' => 'post',
          ],$params
      );
 
@@ -321,6 +322,8 @@ class Solr implements Engine{
          }
          else{
             unset($this->pending_updates[$solr_id]);
+            //add it as a delete then I guess. 
+            $this->pending_deletes[$solr_id] = true;
          }
 
          if ( is_multisite() ) {
