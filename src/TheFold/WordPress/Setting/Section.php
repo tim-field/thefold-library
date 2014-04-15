@@ -16,11 +16,11 @@ class Section
 
     protected $added = false;
 
-    function __construct($id, $title, $callback, $page) {
+    function __construct($id, $title, $callback=null, $page=null) {
         $this->id = $id;
         $this->title = $title;
         $this->callback = $callback;
-        $this->page = $page;
+        $this->page = $page ?: $id;
     }
 
     function get_id(){
