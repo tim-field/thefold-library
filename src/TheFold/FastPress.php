@@ -113,6 +113,11 @@ class FastPress implements Engine
         }
     }
 
+    function get_post_counter()
+    {
+        return $this->current_post;
+    }
+
     function delete_post($post_id)
     {
         return $this->engine->delete_post($post_id);
@@ -232,7 +237,7 @@ class FastPress implements Engine
 
             $next_page = $current_page + 1;
 
-            if ($next_page < $total_pages){
+            if ($next_page <= $total_pages){
                 $this->paging_links['next'] = $format_function($url,$next_page,$qs);
             }
         }
