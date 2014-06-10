@@ -72,6 +72,11 @@ class Avatar{
 
         add_filter( 'get_avatar', function($avatar, $user_id, $size, $default, $alt){
 
+            //this should only be user_id or email. Bail otherwise.
+            if(!is_numeric($user_id) && !is_string($user_id)){
+                return $avatar;
+            }
+
             $key = serialize($user_id).":".serialize($size);
 
             if($cache = get_transient( $key )){
