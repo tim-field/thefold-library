@@ -5,8 +5,8 @@ class GravityForm
 {
     protected $form;
 
-    public function __construct($form, $entries=null){
-        $this->form = $form;
+    public function __construct(&$form, $entries=null){
+        $this->form =& $form;
         $this->entries = $entries;
     }
 
@@ -39,9 +39,7 @@ class GravityForm
 
         foreach ($this->form['fields'] as $field) {
 
-            if ( $field['cssClass'] == $name || 
-                $field['inputName'] == $name || 
-                $field['adminLabel'] == $name) {
+            if ( $this->match_field($field, $name) ) {
 
                 $value = $field['id'];
                 break;
@@ -51,4 +49,23 @@ class GravityForm
         return $value;
     }
 
+    public function &getField($name) {
+
+        foreach ($this->form['fields'] as &$field) {
+
+            if ( $this->match_field($field, $name) ) {
+
+                return $field;
+            }
+        }
+
+        return null;
+    }
+
+    protected function match_field($field, $name)
+    {
+        return ( $field['cssClass'] == $name || 
+                $field['inputName'] == $name || 
+                $field['adminLabel'] == $name);  
+    }
 }
