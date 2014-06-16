@@ -93,7 +93,7 @@ class WordPress{
                     }
                 }
             }
-        },0);
+        },5);
 
         /* I think this is too heavy, should be done manually only
          * \add_filter('admin_init', function(){
