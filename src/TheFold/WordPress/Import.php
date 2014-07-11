@@ -38,7 +38,10 @@ class Import
         //Wordpress::log($post_data);
 
         $core['post_type'] = $type;
-        $core['post_status'] = $status;
+
+        if($status){
+            $core['post_status'] = $status;
+        }
 
         $core_fields = static::core_fields();
 
@@ -50,7 +53,7 @@ class Import
             }
         }
 
-        if (!isset($core['ID']))
+        if (!isset($core['ID']) && isset($core['post_name']) && isset($core['post_type']))
         {
             global $wpdb;
 
@@ -95,6 +98,13 @@ class Import
     * */
     static function map_data($field_map, $data) 
     {
+        if( !is_array($field_map) ) {
+            throw new \Exception('$field_map is not an array');
+        }
+        
+        if( !is_array($data) || empty($data) ) {
+            throw new \Exception('$data is not an array or is empty');
+        }
 
         $post_data = array();
 
@@ -154,24 +164,37 @@ class Import
         );
     }
 
-    static function create_attachment($path, $basename=null){
+    static function create_attachment($path, $basename=null, $replace=false, $uniquename=null){
 
-        if(empty($path)) return null;
+        if(empty($path) || !is_string($path)){
+            return null;
+        }
 
-        if(!$basename)
-        $basename = basename($path);
+        if(!$basename){
+            $basename = basename($path);
+        }
+        
+        if(!$extension = pathinfo($basename, PATHINFO_EXTENSION)){
+            $extension = pathinfo($path, PATHINFO_EXTENSION);
+            $basename .= '.'.$extension;
+        }
 
-        $wp_upload_dir = wp_upload_dir(); 
+        if(!$uniquename){
+            $uniquename = md5($path).'.'.$extension;
+        }
 
+        //I don't know what this is for ?
         $path = str_replace(WP_CONTENT_URL,WP_CONTENT_DIR,$path);
 
-        $file = $wp_upload_dir['path'].'/'.$basename;
+        $file = wp_upload_dir()['path'].'/'.$uniquename;
         $wp_filetype = wp_check_filetype($basename, null );
-
-        copy($path,$file);
+        
+        if($replace || !file_exists($file)){
+            copy($path,$file);
+        }
 
         $attachment_id = wp_insert_attachment(array(
-            'guid' => $wp_upload_dir['baseurl'] .'/'. _wp_relative_upload_path( $file ), 
+            'guid' => $uniquename, 
             'post_mime_type' => $wp_filetype['type'],
             'post_title' => preg_replace('/\.[^.]+$/', '', $basename),
             'post_content' => '',
