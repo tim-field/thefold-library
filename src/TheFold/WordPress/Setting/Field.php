@@ -23,7 +23,7 @@ class Field
 
     function get_display_callback($setting_group){
 
-        if($this->display_callback) {
+        if($this->display_callback && $this->display_callback instanceof \Closure) {
         
             return function() use ($setting_group) { 
                 
@@ -39,8 +39,17 @@ class Field
                 
                 $options = get_option($setting_group);
                 $value = isset($options[$this->name]) ? $options[$this->name] : '';
-                
-                echo "<input id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' type='text' value='{$value}' />"; 
+
+                switch($this->display_callback){
+                    
+                case 'textarea':
+                    echo "<textarea rows=\"10\" cols=\"50\" id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]'>{$value}</textarea>";
+                    break;
+
+                default: 
+                    echo "<input id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' type='text' value='{$value}' />"; 
+
+                }
             };
         }
     }
