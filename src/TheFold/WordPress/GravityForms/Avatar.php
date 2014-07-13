@@ -93,7 +93,7 @@ class Avatar{
 
                     if ($avatar && !$this->overide)
                         return $avatar;
-                    elseif ($attachment_id = get_user_meta($user_id, $this->meta_key, true)) {
+                    elseif ($attachment_id = $this->get_src($user_id)) {
 
                         if( is_numeric($size) && $data = image_get_intermediate_size($attachment_id,array($size,$size))){
 
@@ -103,7 +103,7 @@ class Avatar{
                                 $data['url'] = path_join( dirname($file_url), $data['file'] );
                             }
 
-                            $avatar = "<img src='{$data['url']}' class='avatar' width='$size' />";
+                            $avatar = "<img src='{$data['url']}' class='avatar' id='avatar-{$user_id}' width='$size' />";
 
                         }else{
 
@@ -111,7 +111,7 @@ class Avatar{
                             if ( $image ) {
                                 list($src, $width, $height) = $image;
 
-                                $avatar = "<img src='{$src}' class='avatar' />";
+                                $avatar = "<img src='{$src}' class='avatar' id='avatar-{$user_id}' />";
                             }
                         }
                         
@@ -202,5 +202,10 @@ class Avatar{
                 ));
             }
         });
+    }
+
+    public function get_src($user_id)
+    {
+        return get_user_meta($user_id, $this->meta_key, true);
     }
 }
