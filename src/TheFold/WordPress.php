@@ -45,7 +45,7 @@ class WordPress{
 );
  */
 
-    static function init_url_access($url_callbacks){
+    static function init_url_access($url_callbacks, $priority = 5){
 
         add_filter('rewrite_rules_array',function($rules) use ($url_callbacks) {
 
@@ -93,7 +93,7 @@ class WordPress{
                     }
                 }
             }
-        },5);
+        }, $priority );
 
         /* I think this is too heavy, should be done manually only
          * \add_filter('admin_init', function(){
