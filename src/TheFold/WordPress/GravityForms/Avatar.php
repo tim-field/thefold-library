@@ -8,6 +8,10 @@ class Avatar{
     protected $meta_key;
     protected $gform_field;
 
+    const FILTER_FIELD_CONTENT = 'thefold-gforms-avatar-field-content';
+    const FILTER_FIELD_AVATAR = 'thefold-gforms-avatar-field-avatar';
+    const FILTER_AVATAR = 'thefold-gforms-avatar';
+
     function __construct($meta_key = 'avatar_attachment_id', $gform_field='avatar_image', $overide=false){
 
         $this->meta_key = $meta_key;
@@ -121,8 +125,8 @@ class Avatar{
                 }
             }
 
-            return $avatar;
-
+            return apply_filters(self::FILTER_AVATAR,$avatar,$user_id,$size,$default,$alt);
+        
         },220,5);
 
 
@@ -136,7 +140,17 @@ class Avatar{
 
                     //don't show avatars when first creating a user
                 if( ! $this->is_create_user_form($form_id)) {
-                    $avatar = get_avatar(apply_filters('ecefolio_gform_profile_user_id',get_current_user_id()));
+
+                    $user_id = apply_filters('ecefolio_gform_profile_user_id',
+                        get_current_user_id()
+                    );
+
+                    $avatar = apply_filters(
+                        self::FILTER_FIELD_AVATAR,
+                        get_avatar($user_id),
+                        $user_id
+                    );
+
                 }
 
                 $label = $field['label'];
@@ -159,7 +173,7 @@ class Avatar{
 
             }
 
-            return $field_content;
+            return apply_filters(self::FILTER_FIELD_CONTENT,$field_content,$field,$value,$lead,$form_id);
         },10,5);
 
         //TODO
