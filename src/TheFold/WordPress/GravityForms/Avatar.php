@@ -107,7 +107,7 @@ class Avatar{
                                 $data['url'] = path_join( dirname($file_url), $data['file'] );
                             }
 
-                            $avatar = "<img src='{$data['url']}' class='avatar' id='avatar-{$user_id}' width='$size' />";
+                            $avatar = "<img src='{$data['url']}' class='avatar avatar-{$user_id}' width='$size' />";
 
                         }else{
 
@@ -115,7 +115,7 @@ class Avatar{
                             if ( $image ) {
                                 list($src, $width, $height) = $image;
 
-                                $avatar = "<img src='{$src}' class='avatar' id='avatar-{$user_id}' />";
+                                $avatar = "<img src='{$src}' class='avatar avatar-{$user_id}' />";
                             }
                         }
                         
