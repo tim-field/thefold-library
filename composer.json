@@ -16,7 +16,8 @@
     "require": {
         "php": ">=5.4.0",
         "hybridauth/hybridauth": "dev-master",
-        "solarium/solarium": "3.1.2"
+        "solarium/solarium": "3.1.2",
+        "katzgrau/klogger": "*"
     },
     "autoload": {
         "psr-0": {"TheFold\\": "src/"}
