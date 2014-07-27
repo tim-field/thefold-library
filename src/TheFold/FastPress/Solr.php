@@ -533,14 +533,8 @@ class Solr implements Engine{
 
         $taxonomie = get_taxonomy($name);
 
-        $schema_name = $taxonomie->name;
-
-        $schema_name .= '_txt';
-
-        $category_as_taxonomy = ($taxonomie->name == 'category' && Wordpress::get_option(FastPress::SETTING_NAMESPACE,'category_as_taxonomy',1));
-
         // Index category and tag names
-        $post_mapping[$schema_name] = function($post) use ($taxonomie, $category_as_taxonomy) {
+        $post_mapping[$taxonomie->name.'_txt'] = function($post) use ($taxonomie) {
 
             $names = null;
 
@@ -549,9 +543,7 @@ class Solr implements Engine{
                 $names = [];
 
                 foreach($terms as $term) {
-                    $names[] = ($category_as_taxonomy) ? 
-                        get_category_parents((int)$term->term_id, false, '^^') : 
-                        $term->name;
+                    $names[] = $term->name;
                 }
             }
 
@@ -575,10 +567,29 @@ class Solr implements Engine{
 
             return $names;
         };
+
+        // Index taxonomy ancestor path
+        if(is_taxonomy_hierarchical($taxonomie->name)){
+
+            $post_mapping[$taxonomie->name.'_ancestors'] = function($post) use ($taxonomie) {
+
+                $paths = [];
+
+                if ($terms = get_the_terms($post,$taxonomie->name)) {
+
+                    foreach($terms as $term) {
+                        $paths[] = Wordpress::get_term_parents((int)$term->term_id, $taxonomie->name ,false, '/', true);
+                    }
+                }
+
+                return $paths;
+            };
+        }
     }
 
     return $post_mapping;
  }
+
 
  public function commit_pending()
  {

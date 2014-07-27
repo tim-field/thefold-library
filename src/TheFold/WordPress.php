@@ -185,4 +185,33 @@ class WordPress{
         if ( $page )
             return get_post( $page, $output );
     }
+    
+
+    /**
+     * This function based on the core function get_category_parents but works for any taxonomy.
+     * Used in map_taxonomies function
+     */ 
+    static function get_term_parents( $id, $taxonomy, $link = false, $separator = '/', $nicename = false, $visited = array() ) {
+        $chain = '';
+        $parent = &get_term( $id, $taxonomy );
+        if ( is_wp_error( $parent ) )
+            return $parent;
+
+        if ( $nicename )
+            $name = $parent->slug;
+        else
+            $name = $parent->name;
+
+        if ( $parent->parent && ( $parent->parent != $parent->term_id ) && !in_array( $parent->parent, $visited ) ) {
+            $visited[] = $parent->parent;
+            $chain .= static::get_term_parents( $parent->parent, $taxonomy, $link, $separator, $nicename, $visited );
+        }
+
+        if ( $link )
+            $chain .= '<a href="' . get_term_link( $parent->slug, $taxonomy ) . '" title="' . esc_attr( sprintf( __( "View all posts in %s" ), $parent->name ) ) . '">'.$name.'</a>' . $separator;
+        else
+            $chain .= $name.$separator;
+
+        return $chain;
+    }
 }
