@@ -2,6 +2,11 @@
 
 namespace TheFold\WordPress;
 
+/**
+ * Based on
+ * https://gist.github.com/franz-josef-kaiser/2930190
+ */
+
 class CustomPostStatus 
 {
 
@@ -135,7 +140,7 @@ class CustomPostStatus
             global $post_type;
             if ( is_array( $this->post_type ) )
             {
-                if ( in_array( $post_type, $this->post_type ) )
+                if ( !in_array( $post_type, $this->post_type ) )
                     return;
             }
             elseif ( $this->post_type !== $post_type )
@@ -164,26 +169,32 @@ class CustomPostStatus
             }
         }
 ?>
-        <script type="text/javascript">
-        jQuery( document ).ready( function($)
-            {
-<?php
-        // Add the selected post status label to the "Status: [Name] (Edit)"
-        if ( ! empty( $display ) ) :
-?>
-            $( '#post-status-display' ).html( '<?php echo $display; ?>' )
-<?php
-endif;
+<script type="text/javascript">
+jQuery( document ).ready( function($) {
+    
+    var appended = false;
+    <?php
+    // Add the selected post status label to the "Status: [Name] (Edit)"
+    if ( ! empty( $display ) ) :
+    ?>
+    $( '#post-status-display' ).html( '<?php echo $display; ?>' )
+    <?php
+    endif;
 
-// Add the options to the <select> element
-?>
-$( '.edit-post-status' ).on( 'click', function()
-        {
+    // Add the options to the <select> element
+    ?>
+    $( '.edit-post-status' ).on( 'click', function(){
+        
+        if ( !appended ) {
+
             var select = $( '#post-status-select' ).find( 'select' );
             $( select ).append( "<?php echo $options; ?>" );
-        } );
-            } );
-        </script>
+            appended = true;
+        }
+
+    });
+});
+</script>
 <?php
     }
 }

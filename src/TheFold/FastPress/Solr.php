@@ -489,6 +489,9 @@ class Solr implements Engine{
                     $type = 'dt'; 
                     $is_date = true;
                     break;
+                case 'google_map':
+                    $type = 'p';
+                    break;
                 default:
                     $type = 's';
             }
@@ -508,6 +511,9 @@ class Solr implements Engine{
             }
             elseif($type == 'i'){
                 $value = (int) $value;
+            }
+            elseif($type == 'p'){
+                $value = $value['lat'].','.$value['lng'];
             }
 
             return apply_filters('fastpress_custom_field_value', 
