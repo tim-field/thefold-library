@@ -3,23 +3,60 @@ namespace TheFold;
 
 class WordPress{
     
-    static function render_template($slug, $name = null, $view_params=array(), $return=false)
+
+    static function render_template($slug, $name = null, $view_params=array(), $return=false,$default_path=null)
     {
+        $done = false;
+
+        if(is_array($slug)){
+            extract($slug);
+        }
+
         if($view_params)
         {
             global $wp_query;
 
             foreach($view_params as $key => $value){
-                $wp_query->query_vars[$key] = $value;
+                $wp_query->set($key, $value);
             }
         }
 
         if($return) ob_start();
 
-        get_template_part($slug, $name);
-        
+        if($default_path && file_exists($default_path)) {
+
+            $templates = [];
+            $name = (string) $name;
+            if ( '' !== $name )
+                $templates[] = "{$slug}-{$name}.php";
+
+            $templates[] = "{$slug}.php";
+
+            if(! $done = locate_template($templates,true,false) ){
+
+                $done = true; 
+                load_template($default_path,false);
+            }
+        }
+
+        if(!$done) {
+            get_template_part($slug, $name);
+        }
+
         if($return) 
             return ob_get_clean();
+    }
+
+    static function render_page($slug,$view_params=[],$layout='layouts/default',$return=false)
+    {
+        return static::render_template([
+            'slug' => $layout,
+            'view_params' => array_merge(
+                ['content_for_layout' => static::render_template($slug,null,$view_params,true)],
+                $view_params
+            ),
+            'return' => $return
+        ]);
     }
 
    /**

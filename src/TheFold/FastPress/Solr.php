@@ -301,20 +301,14 @@ class Solr implements Engine{
          {
              $solr_post = $this->get_document();
 
-             foreach ($mapping[$class] as $solr_field => $wp_field) {
+             $data = \TheFold\WordPress\Export::export_object($object,$mapping[$class]);
 
-                 $value = null;
+             $data = array_filter($data, function($val){
+                    return !is_null($val); 
+             });
 
-                 if (is_string($wp_field)) {
-                     $value = $object->$wp_field;
-                 }
-                 elseif (is_callable($wp_field)){
-                     $value = $wp_field($object, $blog_id);
-                 }
-
-                 if(!is_null($value)){
-                     $solr_post->addField($solr_field,$value);
-                 }
+             foreach($data as $field => $value){
+                $solr_post->addField($field,$value);
              }
 
              $this->pending_updates[$solr_id] = apply_filters('thefold_fastpress_update_'.($class == 'WP_Post' ? 'post' : 'user'), $solr_post, $object);

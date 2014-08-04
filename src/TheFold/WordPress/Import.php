@@ -110,23 +110,12 @@ class Import
 
         foreach( $field_map as $wp_field => $data_field ){
 
-            if(is_array($data_field)) {
-
-                $values = array_reduce($data_field, function($values, $field) use ($data) {
-
-                    $values[] = $data[$field];
-
-                    return $values;
-                });
-
-                $value = implode(' ',array_filter($values));
-            }
-            elseif(!is_string($data_field) && is_callable($data_field)){
+            if(!is_string($data_field) && is_callable($data_field)){
                 $value = $data_field($data);
             }
-            else
+            else{
                 $value =  $data[$data_field];
-
+            }
 
             $post_data[$wp_field] = $value;
         }
