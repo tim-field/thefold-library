@@ -49,7 +49,10 @@ class Solr implements Engine{
          'post_modified_gmt',
          'menu_order',
          'post_mime_type',
-         'comment_count'];
+         'comment_count',
+         'category_ancestors',
+         'category_taxonomy'
+     ];
 
 
  static function get_instance($path=null, $hostname=null, $port=null)
@@ -648,6 +651,7 @@ class Solr implements Engine{
          'nopaging' => false,
          'page' => 1,
          'rows' => 1000,
+         'fields' => [],
          'with_facets' => $this->with_facets
      ];
 

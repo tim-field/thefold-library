@@ -33,7 +33,7 @@ class Export
                 $value = $object->$wp_field;
             }
             elseif (is_callable($wp_field)){
-                $value = $wp_field($object, $blog_id);
+                $value = $wp_field($object);
             }
 
             if($format == 'array'){

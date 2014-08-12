@@ -230,7 +230,7 @@ class WordPress{
      */ 
     static function get_term_parents( $id, $taxonomy, $link = false, $separator = '/', $nicename = false, $visited = array() ) {
         $chain = '';
-        $parent = &get_term( $id, $taxonomy );
+        $parent = get_term( $id, $taxonomy );
         if ( is_wp_error( $parent ) )
             return $parent;
 
