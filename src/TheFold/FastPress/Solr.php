@@ -501,7 +501,7 @@ class Solr implements Engine{
             $value = get_post_meta($post->ID,$field,true);
 
             if($value === ''){
-                $value = null;
+                $value = $type == 'b' ? false : null;
             }
             elseif($type == 'dt'){
                 $value = $this->format_date($value); 
