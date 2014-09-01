@@ -782,6 +782,8 @@ class Solr implements Engine{
      if(!$this->client){
          // create a client instance
          $this->client = new Client($this->get_config());
+
+         do_action_ref_array('thefold-fastpress-solr-client-init',array(&$this));
      }
 
      return $this->client;
