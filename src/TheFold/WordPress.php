@@ -23,7 +23,7 @@ class WordPress{
 
         if($return) ob_start();
 
-        if($default_path && file_exists($default_path)) {
+        if($default_path) {
 
             $templates = [];
             $name = (string) $name;
@@ -35,7 +35,7 @@ class WordPress{
             if(! $done = locate_template($templates,true,false) ){
 
                 $done = true; 
-                load_template($default_path,false);
+                load_template($default_path.'.php',false);
             }
         }
 
