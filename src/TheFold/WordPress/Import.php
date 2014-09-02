@@ -183,9 +183,10 @@ class Import
         }
 
         $attachment_id = wp_insert_attachment(array(
-            'guid' => $uniquename, 
+            //'guid' => $uniquename, 
             'post_mime_type' => $wp_filetype['type'],
             'post_title' => preg_replace('/\.[^.]+$/', '', $basename),
+            'post_name' => $uniquename,
             'post_content' => '',
             'post_status' => 'inherit'
         ), $file, $parent = 0);
