@@ -681,9 +681,9 @@ class Solr implements Engine{
 
          $from_date = isset($params['date_range']['from_date']) ? date('c',strtotime($params['date_range']['from_date'])).'Z/DAY' : 'NOW/DAY';
 
-         $to_date = isset($params['date_range']['to_date']) ? date('c',strtotime($params['date_range']['to_date'])).'Z/DAY' : "{$from_date}+{$days_out}DAY";
+         $to_date = isset($params['date_range']['to_date']) ? date('c',strtotime($params['date_range']['to_date'])).'Z/DAY+1DAY' : "{$from_date}+{$days_out}DAY";
 
-         $date_field = isset($params['date_range']['date_field']) ? $params['date_range']['date_field'] : 'date';
+         $date_field = isset($params['date_range']['date_field']) ? $params['date_range']['date_field'] : 'post_date';
 
          $query->createFilterQuery('daterange')->setQuery("$date_field:[$from_date TO $to_date]");
      }
