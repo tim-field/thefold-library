@@ -24,15 +24,22 @@ class Export
     static function export_object($object, $map, $format='array'){
 
         $export = $format == 'array' ? [] : new $format;
+        
+        $have_switched = false;
+
+        if(is_multisite() && $object instanceof \WP_Post && $object->blogid != get_current_blog_id()){
+            switch_to_blog($object->blogid); 
+            $have_switched = true;
+        }
 
         foreach ($map as $export_field => $wp_field) {
 
             $value = null;
 
             if (is_string($wp_field)) {
-                $value = $object->$wp_field;
+                $value = is_array($object) ? $object[$wp_field] : $object->$wp_field;
             }
-            elseif (is_callable($wp_field)){
+            elseif ($wp_field instanceof \Closure){
                 $value = $wp_field($object);
             }
 
@@ -41,6 +48,10 @@ class Export
             }else{
                 $export->$export_field = $value;
             }
+        }
+
+        if($have_switched){
+            restore_current_blog();
         }
 
         return $export;

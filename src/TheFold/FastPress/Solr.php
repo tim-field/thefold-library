@@ -123,8 +123,9 @@ class Solr implements Engine{
     $this->with_facets = true;
  }
  
- static function format_date($thedate){
-    return gmdate('Y-m-d\TH:i:s\Z', is_numeric($thedate) ? $thedate : strtotime($thedate)); 
+ static function format_date($thedate)
+ {                                   // catch timestamps
+     return gmdate('Y-m-d\TH:i:s\Z', (is_numeric($thedate) && strlen($thedate) == 10) ? $thedate : strtotime($thedate)); 
  }
 
   //interface
@@ -155,17 +156,19 @@ class Solr implements Engine{
 
      foreach($resultset as $document){
 
-         if($hard_fetch){ 
-             
+         if($hard_fetch){
+
              $posts[] = \WP_Post::get_instance($document['id']);
 
          } else {
-             
-            $posts[] = $this->init_wp_post($document->getFields());
+
+             $posts[] = $this->init_wp_post($document->getFields());
          }
      }
-    
-     update_post_caches($posts, isset($params['post_type']) ? $params['post_type'] : 'post', true, true);
+
+     if(!isset($params['blogid']) || $params['blogid'] !== '*'){ 
+         update_post_caches($posts, isset($params['post_type']) ? $params['post_type'] : 'post', true, true);
+     }
 
      if(!empty($params['cache_key'])){
         $this->cache_set($params['cache_key'],$posts);
@@ -670,7 +673,11 @@ class Solr implements Engine{
         $query->setQuery($params['query']);
      }
 
-     if(!isset($params['blogid']) && is_multisite() && $params['wp_class'] != 'WP_User')
+     if(isset($params['blogid']) && $params['blogid'] === '*'){
+     
+        $query->createFilterQuery('allblogs')->setQuery('blogid:*');
+     }
+     elseif(!isset($params['blogid']) && is_multisite() && $params['wp_class'] != 'WP_User')
      {
         $params['fields']['blogid'] = get_current_blog_id();
      }
@@ -883,6 +890,13 @@ class Solr implements Engine{
  //take returned solr fields and return a wp post object
  protected function init_wp_post($fields)
  {
+     $have_switched = false;
+
+     if(is_multisite() && !empty($fields['blogid']) && $fields['blogid'] != get_current_blog_id()){
+         switch_to_blog($fields['blogid']); 
+         $have_switched = true;
+     }
+
      $fields['post_date'] = date('Y-m-d H:i:s', strtotime($fields['post_date']));
      $fields['post_date_gmt'] = date('Y-m-d H:i:s', strtotime($fields['post_date_gmt']));
      
@@ -898,7 +912,13 @@ class Solr implements Engine{
      $safe_fields['ID'] = $fields['id'];
      unset($safe_fields['id']);
 
-     return new \WP_Post((object)$safe_fields);
+     $post = new \WP_Post((object)$safe_fields);
+
+     if($have_switched){
+         restore_current_blog();
+     }
+
+     return $post;
  }
 
  protected function init_wp_user($fields)
