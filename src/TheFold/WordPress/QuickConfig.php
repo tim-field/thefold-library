@@ -16,7 +16,7 @@ abstract class QuickConfig
     function __get($key) 
     {
         if(isset($this->info[$key]))
-            return is_callable($this->info[$key]) ? $this->info[$key]() : $this->info[$key];
+            return $this->info[$key] instanceof \Closure ? $this->info[$key]() : $this->info[$key];
 
         if(is_callable(array($this,'default_'.$key)))
             return $this->{'default_'.$key}();
