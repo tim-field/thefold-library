@@ -40,7 +40,7 @@ class ACF{
 
         $safe_field_name = preg_replace('/[^\w\s]/','',$field_name);
 
-        return $wpdb->get_var("SELECT meta_value FROM $wpdb->postmeta WHERE meta_key = '_$field_name'");
+        return $wpdb->get_var("SELECT meta_value FROM $wpdb->postmeta WHERE meta_key = '_$field_name' ORDER BY meta_id DESC LIMIT 1");
     }
 
     //Note, this only works if the ACF fields are defined in the admin.
