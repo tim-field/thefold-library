@@ -830,6 +830,10 @@ class Solr implements Engine{
 
  protected function create_query_string($field, $value)
  {
+     if($value === true || $value === false){
+        return $field.':'.($value ? 1 : 0);
+     }
+
      return $field.':("'.implode('" "', (array) $value).'")';
  }
 
@@ -904,7 +908,7 @@ class Solr implements Engine{
      $fields['post_modified_gmt'] = date('Y-m-d H:i:s', strtotime($fields['post_modified_gmt']));
 
      $safe_fields = [];
-
+     //todo only do this where needed
      foreach($fields as $field => $value) {
          $safe_fields[ strtolower(str_replace('-','_',$field)) ] = $value;
      }

@@ -72,7 +72,8 @@ class CustomPostType extends QuickConfig
                 'taxonomies' => $this->taxonomies,
                 'has_archive' => $this->has_archive
             ]);
-            
+
+            /*
             add_filter( 'post_updated_messages', function(){
 
                 $post             = get_post();
@@ -85,7 +86,7 @@ class CustomPostType extends QuickConfig
                     2  => "Custom field updated.",
                     3  => "Custom field deleted.",
                     4  => "$this->name updated.",
-                    /* translators: %s: date and time of the revision */
+                    // translators: %s: date and time of the revision 
                     5  => isset( $_GET['revision'] ) ? sprintf( $this->name ." restored to revision from %s" , wp_post_revision_title( (int) $_GET['revision'], false ) )  : false,
                     6  => $this->name.' published',
                     7  => $this->name. ' saved',
@@ -113,7 +114,7 @@ class CustomPostType extends QuickConfig
                 }
 
                 return $messages;
-            });
+            });*/
 
         },99);
     }
