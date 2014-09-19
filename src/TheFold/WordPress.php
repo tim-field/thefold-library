@@ -7,6 +7,7 @@ class WordPress{
     static function render_template($slug, $name = null, $view_params=array(), $return=false,$default_path=null)
     {
         $done = false;
+        $old_globals = [];
 
         if(is_array($slug)){
             extract($slug);
@@ -15,8 +16,10 @@ class WordPress{
         if($view_params)
         {
             global $wp_query;
-
             foreach($view_params as $key => $value){
+
+                $old_globals[$key] = $wp_query->get($key.null);
+
                 $wp_query->set($key, $value);
             }
         }
@@ -41,6 +44,13 @@ class WordPress{
 
         if(!$done) {
             get_template_part($slug, $name);
+        }
+
+        if($old_globals){
+            //Reset any global variables back to how they were
+            foreach($old_globals as $key => $old_value){
+                $wp_query->set($key, $old_value);
+            }
         }
 
         if($return) 
