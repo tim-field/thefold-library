@@ -567,8 +567,16 @@ class Solr implements Engine{
                 $names = [];
 
                 foreach($terms as $term) {
+                    
                     $names[] = $term->slug;
+                    
+                    if($taxonomie->name === 'category'){
+
+                        $names = array_merge($names, explode('/',get_category_parents($term->term_id)));
+                    }
                 }
+
+                $names = array_unique(array_filter($names));
             }
 
             return $names;
