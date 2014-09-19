@@ -572,7 +572,7 @@ class Solr implements Engine{
                     
                     if($taxonomie->name === 'category'){
 
-                        $names = array_merge($names, explode('/',get_category_parents($term->term_id)));
+                        $names = array_merge($names, explode('/',get_category_parents($term->term_id, false,'/', true)));
                     }
                 }
 
