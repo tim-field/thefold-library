@@ -18,7 +18,7 @@ class WordPress{
             global $wp_query;
             foreach($view_params as $key => $value){
 
-                $old_globals[$key] = $wp_query->get($key.null);
+                $old_globals[$key] = $wp_query->get($key,null);
 
                 $wp_query->set($key, $value);
             }
