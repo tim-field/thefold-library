@@ -70,10 +70,13 @@ class Solr implements Engine{
      $this->hostname = $hostname;
      $this->port = $port;
 
-     add_action('shutdown',function(){
+     if($path && $hostname && $port){
 
-         $this->commit_pending(); 
-     });
+         add_action('shutdown',function(){
+
+             $this->commit_pending(); 
+         });
+     }
  }
 
 
@@ -173,6 +176,8 @@ class Solr implements Engine{
      if(!empty($params['cache_key'])){
         $this->cache_set($params['cache_key'],$posts);
      }
+
+     reset($posts);
 
      return $posts;
  }
