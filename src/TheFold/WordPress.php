@@ -140,7 +140,7 @@ class WordPress{
                     }
                 }
             }
-        }, $priority );
+        }, get_option('url_access_priority',$priority) );
 
         /* I think this is too heavy, should be done manually only
          * \add_filter('admin_init', function(){
