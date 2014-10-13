@@ -686,6 +686,30 @@ class Solr implements Engine{
         $query->setQuery($params['query']);
      }
 
+     if(isset($params['post_status'])){
+
+         $ps_queries = [];
+         $ps_status = [];
+         
+         foreach((array)$params['post_status'] as $status){
+            
+             if($status == 'private'){
+                $ps_queries[] = sprintf('(post_author:%d AND post_status:"private")',get_current_user_id());
+             }
+             else{
+                 $ps_status[] = $status;
+             }
+         }
+         
+         if($ps_status){
+             $ps_queries[] = $this->create_query_string('post_status', $ps_status);
+         }
+
+         $query->createFilterQuery('post_status')->setQuery('('.implode(' OR ',$ps_queries).')');
+
+         unset($params['post_status']);
+     }
+
      if(isset($params['blogid']) && $params['blogid'] === '*'){
      
         $query->createFilterQuery('allblogs')->setQuery('blogid:*');
