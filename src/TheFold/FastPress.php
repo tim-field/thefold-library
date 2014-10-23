@@ -144,6 +144,11 @@ class FastPress implements Engine
         return $this->engine->set_facets($facets); 
     }
     
+    function set_facet_queries($facets=[])
+    {
+        return $this->engine->set_facet_queries($facets); 
+    }
+    
     function get_facets($qparams=null)
     {
         return $this->engine->get_facets($qparams); 

@@ -20,6 +20,7 @@ class Solr implements Engine{
  protected $path;
  protected $client;
  protected $facets = ['category'=>'always','tag'=>'always'];
+ protected $facet_queries = [];
  protected $last_resultset = null;
  protected $result_count = null;
  protected $update_document;
@@ -125,7 +126,14 @@ class Solr implements Engine{
     $this->facets = $facets;
     $this->with_facets = true;
  }
- 
+
+ function set_facet_queries($facet_queries=[])
+ {
+    $this->facet_queries = [];
+    $this->facets = []; //unset legacy facets
+    $this->with_facets = true;
+ }
+
  static function format_date($thedate)
  {                                   // catch timestamps
      return gmdate('Y-m-d\TH:i:s\Z', (is_numeric($thedate) && strlen($thedate) == 10) ? $thedate : strtotime($thedate)); 
@@ -169,15 +177,18 @@ class Solr implements Engine{
          }
      }
 
-     if(!isset($params['blogid']) || $params['blogid'] !== '*'){ 
-         update_post_caches($posts, isset($params['post_type']) ? $params['post_type'] : 'post', true, true);
-     }
-
      if(!empty($params['cache_key'])){
-        $this->cache_set($params['cache_key'],$posts);
+         $this->cache_set($params['cache_key'],$posts);
      }
 
-     reset($posts);
+     if($posts){
+
+         if(!isset($params['blogid']) || $params['blogid'] !== '*'){ 
+             update_post_caches($posts, isset($params['post_type']) ? $params['post_type'] : 'post', true, true);
+         }
+         
+         reset($posts);
+     }
 
      return $posts;
  }
@@ -749,6 +760,12 @@ class Solr implements Engine{
          }
      }
 
+     if(!empty($params['fq'])) {
+         foreach($params['fq'] as $name => $facet_query) {
+             $query->createFilterQuery($name)->setQuery($facet_query);
+         }
+     }
+
      foreach($this->facets(true) as $facet => $tag) {
 
          $value = null;  
@@ -785,6 +802,16 @@ class Solr implements Engine{
          }
      }
 
+     if( !empty($params['with_facets']) && $facets = $this->facet_queries) {
+
+         $facetSet = $query->getFacetSet();
+
+         foreach($this->facet_queries as $name => $query) {
+             
+             $facetSet->createFacetQuery($name)->setQuery($query);
+         }
+     }
+     
      $sorts = [];
 
      if(isset($params['sorts'])) {
