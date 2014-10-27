@@ -21,8 +21,6 @@ interface Engine {
 
     function set_facets($facets=[]);
     
-    function set_facet_queries($facets=[]);
-
     function get_facets($qparams=null);
     
     function get_facet($name, $qparams=null, $reuse=true);

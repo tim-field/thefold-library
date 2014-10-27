@@ -8,7 +8,6 @@ use \TheFold\FastPress;
 use \TheFold\WordPress\Cache;
 use \TheFold\WordPress\ACF;
 
-
 class Solr implements Engine{
     
     use Cache; 
@@ -19,8 +18,7 @@ class Solr implements Engine{
  protected $port;
  protected $path;
  protected $client;
- protected $facets = ['category'=>'always','tag'=>'always'];
- protected $facet_queries = [];
+ protected $facets = [];// = ['category'=>'always','tag'=>'always'];
  protected $last_resultset = null;
  protected $result_count = null;
  protected $update_document;
@@ -123,20 +121,28 @@ class Solr implements Engine{
  //interface
  function set_facets($facets=[])
  {
-    $this->facets = $facets;
-    $this->with_facets = true;
- }
+     foreach($facets as $k => $v){
 
- function set_facet_queries($facet_queries=[])
- {
-    $this->facet_queries = [];
-    $this->facets = []; //unset legacy facets
-    $this->with_facets = true;
+         if($v instanceof Solr\Facet){
+            $this->facets[$v->get_name()] = $v;
+         }
+         elseif(is_string($v)){
+             //legacy format 
+             $this->facets[$k] = new Solr\Facet\Field($k);
+        }
+     }
+     
+     $this->with_facets = true;
  }
 
  static function format_date($thedate)
- {                                   // catch timestamps
-     return gmdate('Y-m-d\TH:i:s\Z', (is_numeric($thedate) && strlen($thedate) == 10) ? $thedate : strtotime($thedate)); 
+ {                                   
+     //time must always be in UTC ( this is what Z represents) https://cwiki.apache.org/confluence/display/solr/Working+with+Dates
+     //we strip php's +00:00 from the end of the date replace it with Z
+     //note call to gmdate ( which gives us a UTC time )
+     return preg_replace('#\+00:00$#','Z', gmdate('c',
+         // catch timestamps
+         (is_numeric($thedate) && strlen($thedate) == 10) ? $thedate : strtotime($thedate))); 
  }
 
   //interface
@@ -734,13 +740,15 @@ class Solr implements Engine{
 
          $days_out = isset($params['date_range']['days_out']) ? $params['date_range']['days_out'] : 1;
 
-         $from_date = isset($params['date_range']['from_date']) ? date('c',strtotime($params['date_range']['from_date'])).'Z/DAY' : 'NOW/DAY';
+         $from_date = isset($params['date_range']['from_date']) ? self::format_date($params['date_range']['from_date']).'/DAY' : 'NOW/DAY';
 
-         $to_date = isset($params['date_range']['to_date']) ? date('c',strtotime($params['date_range']['to_date'])).'Z/DAY+1DAY' : "{$from_date}+{$days_out}DAY";
+         $to_date = isset($params['date_range']['to_date']) ? self::format_date($params['date_range']['to_date']).'/DAY+1DAY' : "{$from_date}+{$days_out}DAY";
 
          $date_field = isset($params['date_range']['date_field']) ? $params['date_range']['date_field'] : 'post_date';
 
-         $query->createFilterQuery('daterange')->setQuery("$date_field:[$from_date TO $to_date]");
+         $query->createFilterQuery('daterange')
+             ->setQuery("$date_field:[$from_date TO $to_date]")
+             ->addTag('date_range');
      }
 
      if(isset($params['wp_class'])){
@@ -756,7 +764,9 @@ class Solr implements Engine{
      if(!empty($params['fields'])) {
         
          foreach($params['fields'] as $field => $value) {
-             $query->createFilterQuery($field.'-query')->setQuery( $this->create_query_string($field, $value));
+             $query->createFilterQuery($field.'-field')
+                 ->setQuery( $this->create_query_string($field, $value) )
+                 ->addTags([$field,'fields']);
          }
      }
 
@@ -766,25 +776,23 @@ class Solr implements Engine{
          }
      }
 
-     foreach($this->facets(true) as $facet => $tag) {
+     //Auto query field facets
+     foreach($this->facets(true) as $name => $facet) {
 
          $value = null;  
 
-         if(!empty($params['facets'][$facet])) {
-            $value = $params['facets'][$facet];
+         if(!empty($params['facets'][$name])) {
+            $value = $params['facets'][$name];
          }
          //Auto pull from get if avaiable. Hacky? Useful tho
-         elseif(!empty($_GET[$facet])){ 
-            $value = urldecode($_GET[$facet]);
+         elseif(!empty($_GET[$name])){ 
+            $value = urldecode($_GET[$name]);
          }
 
          if(!is_null($value)) {
-             $query->addFilterQuery([
-                 'field'=>$facet,
-                 'key'=>$facet,
-                 'query'=> $this->create_query_string($facet, $value),
-                 'tag' => $tag,
-             ]);
+             $query->createFilterQuery($name)
+                 ->setQuery($facet->apply($value))
+                 ->addTags([$name,'facets']);
          }
      }
 
@@ -792,26 +800,12 @@ class Solr implements Engine{
 
          $facetSet = $query->getFacetSet();
 
-         foreach($facets as $field => $tag) {
+         foreach($facets as $facet) {
 
-             $facetSet->createFacetField([
-                 'field'=>$field,
-                 'key'=>$field,
-                 'exclude'=>'user'
-                 ]);
+            $facet->create($facetSet); 
          }
      }
 
-     if( !empty($params['with_facets']) && $facets = $this->facet_queries) {
-
-         $facetSet = $query->getFacetSet();
-
-         foreach($this->facet_queries as $name => $query) {
-             
-             $facetSet->createFacetQuery($name)->setQuery($query);
-         }
-     }
-     
      $sorts = [];
 
      if(isset($params['sorts'])) {
@@ -843,9 +837,11 @@ class Solr implements Engine{
      return $query;
  } 
 
- protected function facets($with_tags=false){
+ protected function facets($as_object=false){
 
-     return $with_tags ? $this->facets : array_keys($this->facets);
+     reset($this->facets);
+
+     return $as_object ? $this->facets : array_keys($this->facets);
  }
 
  protected function get_client(){
@@ -892,7 +888,7 @@ class Solr implements Engine{
      ];
  }
 
- protected function create_query_string($field, $value)
+ public static function create_query_string($field, $value)
  {
      if($value === true || $value === false){
         return $field.':'.($value ? 1 : 0);
