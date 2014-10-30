@@ -74,7 +74,7 @@ class Solr implements Engine{
          add_action('shutdown',function(){
 
              $this->commit_pending(); 
-         });
+         },100);
      }
  }
 
@@ -749,6 +749,19 @@ class Solr implements Engine{
          $query->createFilterQuery('daterange')
              ->setQuery("$date_field:[$from_date TO $to_date]")
              ->addTag('date_range');
+     }
+
+     if(isset($params['bounds'])){
+         
+         foreach($params['bounds'] as $field => $bounds){
+
+             $bounds = explode(',', $bounds);
+
+             $sw = implode(',',array_slice($bounds,0,2));
+             $nw = implode(',',array_slice($bounds,2,4));
+             $query->createFilterQuery($field)->setQuery("$field:[$sw TO $nw]")
+                 ->addTags([$field,'bounds','fields']);
+         }
      }
 
      if(isset($params['wp_class'])){
