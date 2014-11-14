@@ -18,7 +18,7 @@ class Page
 {
     function __construct($setting, $display_name, $setting_fields, $page_callback=null, $capability='manage_options')
     {
-        add_action('admin_menu', function() use($display_name, $setting, $page_callback ) {
+        add_action('admin_menu', function() use($display_name, $setting, $page_callback, $capability ) {
 
             add_options_page($display_name, $display_name, $capability, $setting, function() use ($page_callback, $setting, $display_name) {
 
