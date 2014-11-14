@@ -16,11 +16,11 @@ new Setting\Page('email_to_circ','Email to Circular Options',array(
     
 class Page
 {
-    function __construct($setting, $display_name, $setting_fields, $page_callback=null)
+    function __construct($setting, $display_name, $setting_fields, $page_callback=null, $capability='manage_options')
     {
         add_action('admin_menu', function() use($display_name, $setting, $page_callback ) {
 
-            add_options_page($display_name, $display_name, 'manage_options', $setting, function() use ($page_callback, $setting, $display_name) {
+            add_options_page($display_name, $display_name, $capability, $setting, function() use ($page_callback, $setting, $display_name) {
 
                 if($page_callback)
                     $page_callback();
