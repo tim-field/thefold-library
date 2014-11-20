@@ -6,6 +6,7 @@ namespace TheFold\WordPress;
  */
 class CustomPostType extends QuickConfig
 {
+    //https://developer.wordpress.org/resource/dashicons/
     function __construct($type, $name, $info=array()){
 
         if(strlen($type) > 20){
