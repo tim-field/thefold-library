@@ -744,7 +744,7 @@ class Solr implements Engine{
 
          $to_date = isset($params['date_range']['to_date']) ? self::format_date($params['date_range']['to_date']).'/DAY+1DAY' : "{$from_date}+{$days_out}DAY";
 
-         $date_field = isset($params['date_range']['date_field']) ? $params['date_range']['date_field'] : 'post_date';
+         $date_field = isset($params['date_range']['date_field']) ? $params['date_range']['date_field'] : 'post_date_gmt';
 
          $query->createFilterQuery('daterange')
              ->setQuery("$date_field:[$from_date TO $to_date]")

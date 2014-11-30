@@ -261,4 +261,8 @@ class WordPress{
 
         return $chain;
     }
+
+    static function is_admin(){
+        return (is_admin() && ( !defined( 'DOING_AJAX' ) || !\DOING_AJAX ));
+    }
 }
