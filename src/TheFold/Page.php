@@ -15,6 +15,18 @@ abstract class Page {
     {
         return $this->components[$name]; 
     }
+    
+    function json() {
+
+        $json = [];
+
+        foreach($this->components as $name => $component){
+            
+            $json[$name] = $component->json();
+        }
+
+        return $json;
+    }
 
     protected function init_js()
     {
@@ -27,4 +39,9 @@ abstract class Page {
     }
 
     abstract function render();
+
+    protected function is_ajax()
+    {
+        return (defined('DOING_AJAX') && DOING_AJAX) || ( isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_GET['is_ajax']);
+    }
 }

@@ -13,6 +13,7 @@ abstract class Publication {
 
     function subscribe($name, \Closure $callback)
     {
-        add_action(self::PREFIX.$name,$callback);
+        add_action(self::PREFIX.$name, $callback);
     }
+
 }
