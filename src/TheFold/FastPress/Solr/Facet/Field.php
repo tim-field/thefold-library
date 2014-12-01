@@ -5,10 +5,12 @@ class Field extends \TheFold\FastPress\Solr\Facet{
 
     public $field;
     public $label;
+    protected $excludes;
 
-    function __construct($field, $label=''){
+    function __construct($field, $label='', $excludes=[]){
         $this->field = $field;
         $this->label = $label;
+        $this->excludes = array_merge([$this->field],(array) $excludes);
     }
 
     function get_name(){
@@ -22,7 +24,7 @@ class Field extends \TheFold\FastPress\Solr\Facet{
     function create(\Solarium\QueryType\Select\Query\Component\FacetSet &$facetSet){
         $facetSet->createFacetField($this->field)
             ->setField($this->field)
-            ->addExclude($this->field);
+            ->addExcludes($this->excludes);
     }
 
     function apply($value){
