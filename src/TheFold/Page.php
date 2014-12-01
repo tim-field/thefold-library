@@ -6,7 +6,7 @@ abstract class Page {
 
     protected $components;
 
-    function add_component(\TheFold\Page\Component $component, $name)
+    function add_component(Page\Component $component, $name)
     {
         $this->components[$name] = $component;    
     }
@@ -28,13 +28,23 @@ abstract class Page {
         return $json;
     }
 
-    protected function init_js()
+    function get_facets()
+    { 
+        return array_map(function($component){
+            
+            if ($component instanceof Page\Component\Facet) {
+                return $component->get_facet();
+            }
+        }, $this->components);
+    }
+
+    protected function init_js($path)
     {
-        //Todo how to get this accessable ? CDN ?
-        //wp_register_script('thefold-page',plugin_dir_url(__FILE__).'/Page.js',['jquery'],null,true);
+        //todo try this
+        //wp_register_script('thefold-page',plugin_dir_url($path).'/Page.js',['jquery'],null,true);
 
         foreach($this->components as $component){
-            $component->init_js();
+            $component->init_js($path);
         }
     }
 
