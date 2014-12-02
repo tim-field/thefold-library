@@ -102,21 +102,26 @@ class Import
             throw new \Exception('$field_map is not an array');
         }
         
-        if( !is_array($data) || empty($data) ) {
-            throw new \Exception('$data is not an array or is empty');
+        if( (!is_array($data) && !is_object($data)) || empty($data) ) {
+            throw new \Exception('$data is not an array or object or is empty');
         }
 
         $post_data = array();
 
         foreach( $field_map as $wp_field => $data_field ){
 
-            if(!is_string($data_field) && is_callable($data_field)){
+            $value = null;
+
+            if($data_field instanceof \Closure){
                 $value = $data_field($data);
             }
-            else{
+            elseif(is_array($data)){
                 $value =  $data[$data_field];
             }
-
+            elseif(is_object($data)){
+                $value =  $data->$data_field;
+            }
+            
             $post_data[$wp_field] = $value;
         }
 
