@@ -17,7 +17,12 @@ abstract class Component
     function subscribe(\TheFold\Publication $publication)
     {
         $publication->subscribe(function($posts){
-            
+
+            //seems to be sub quirk of add action that an array with one value is passed with its value
+            if($posts instanceof \WP_Post){
+                $posts = [$posts];
+            }
+
             $this->posts = $posts;
         });
     }
