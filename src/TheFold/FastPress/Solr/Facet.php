@@ -14,6 +14,6 @@ abstract class Facet{
     }
     
     function render($value, $count){
-        return $value.' '.$count;
+        return $value.' ('.$count.')';
     }
 }
