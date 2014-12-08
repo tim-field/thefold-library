@@ -14,6 +14,8 @@ class Solr implements Engine{
 
  protected static $instance;
 
+    const AUTO_COMMIT_AT = 300;
+
  protected $hostname;
  protected $port;
  protected $path;
@@ -276,6 +278,10 @@ class Solr implements Engine{
  public function update_post(\WP_Post $post)
  {
      $this->pending_updates[$this->get_solr_id($post->ID,'WP_Post')] = [ 'ID' => $post->ID, 'blog_id' => get_current_blog_id(), 'class'=> 'WP_Post' ];
+
+     if(count($this->pending_updates) >= self::AUTO_COMMIT_AT){
+         $this->commit_pending();
+     }
  }
 
  public function update_user(\WP_User $user)
@@ -378,8 +384,13 @@ class Solr implements Engine{
 
  public function get_mapping()
  {
-    $this->mapping['WP_Post'] = $this->get_post_mapping();
-    $this->mapping['WP_User'] = $this->get_user_mapping();
+     if(!isset($this->mapping['WP_Post'])) {
+         $this->mapping['WP_Post'] = $this->get_post_mapping();
+     }
+     
+     if(!isset($this->mapping['WP_User'])) {
+         $this->mapping['WP_User'] = $this->get_user_mapping();
+     }
 
     return $this->mapping;
  }
