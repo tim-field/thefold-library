@@ -2,7 +2,7 @@
 
 namespace TheFold;
 
-class Publication {
+abstract class Publication {
 
     const PREFIX = 'thefold-publication-';
 
