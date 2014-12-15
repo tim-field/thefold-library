@@ -16,7 +16,8 @@ abstract class Facet extends \TheFold\Page\Component{
 
     abstract function get_facet();
 
-    function subscribe(\TheFold\Publication $publication)
+    /*function subscribe(\TheFold\Publication $publication)*/
+    function subscribe($publication) //temp
     {
         $publication->subscribe_facets(function($facet_values){
             
