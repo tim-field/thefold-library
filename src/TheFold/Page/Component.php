@@ -10,7 +10,17 @@ abstract class Component
 
     function init_js(){}
 
-    function render(){ return '';}
+    function render($view_params=[],$partial=null){ 
+
+        if($partial){
+
+            $view_params = array_replace_recursive($view_params,[
+                'self' => $this
+            ]);
+
+            \TheFold\WordPress::render_template($partial,null,$view_params);
+        }
+    }
 
     function json(){ ob_start(); $this->render(); return ob_get_clean(); }
    

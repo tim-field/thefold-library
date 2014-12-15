@@ -64,6 +64,7 @@ abstract class Facet extends \TheFold\Page\Component{
     function init_js($path)
     {
         //TODO load from correct locaiton
+        //
         wp_enqueue_script('thefold-component-facet', plugin_dir_url($path).'Facet.js',['thefold-page'],'1',true);
 
         $namespace = explode('\\',get_called_class());
