@@ -11,7 +11,7 @@ abstract class Component
 
     function init_js(){}
 
-    function render($view_params=[],$partial=null){ 
+    function render(array $view_params=[],$partial=null){ 
 
         if($partial){
 
