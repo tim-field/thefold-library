@@ -2,9 +2,9 @@
 
 namespace TheFold;
 
-abstract class Page {
+abstract class Page extends Page\Component{
 
-    protected $components;
+    protected $components = [];
 
     function add_component(Page\Component $component, $name)
     {
@@ -37,18 +37,34 @@ abstract class Page {
             }
         }, $this->components);
     }
-
-    protected function init_js($path)
+    
+    function get_js_path()
     {
-        //todo try this
-        //wp_register_script('thefold-page',plugin_dir_url($path).'/Page.js',['jquery'],null,true);
-
-        foreach($this->components as $component){
-            $component->init_js($path);
-        }
+        return trim($this->plugin_url,'/').'/js/'.$this->get_name().'.js';
     }
 
-    abstract function render();
+    function init_js($plugin_url)
+    {
+        foreach($this->components as $component){
+            $component->init_js($plugin_url);
+        }
+
+        wp_enqueue_script('TheFoldPage', trim($plugin_url,'/').'/js/Page.js',['jquery','underscore'], $this->version, true);
+
+        parent::init_js($plugin_url);
+    }
+
+    function get_js_deps()
+    {
+        $deps = array_map(function($component){
+            return $component->get_js_handle(); 
+
+        }, $this->components);
+
+        $deps[] = 'TheFoldPage';
+
+        return $deps;
+    }
 
     protected function is_ajax()
     {

@@ -61,17 +61,22 @@ abstract class Facet extends \TheFold\Page\Component{
 
         WordPress::render_template($partial,null,$view_params);
     }
-    
-    function init_js($path)
+   
+    function get_js_path()
     {
-        //TODO load from correct locaiton
-        wp_enqueue_script('thefold-component-facet', plugin_dir_url($path).'Facet.js',['thefold-page'],'1',true);
+        return trim($this->plugin_url,'/').'/js/components/Facet.js';
+    }
 
-        $namespace = explode('\\',get_called_class());
-
-        wp_localize_script('thefold-component-facet',str_replace('\\','',end($namespace)).'Config',[
+    function get_js_handle()
+    {
+        return 'TheFoldPageComponentFacet'; 
+    }
+    
+    function get_js_config()
+    {
+        return [
             'selector'=>'#facet_'.$this->get_name(),
             'name' => $this->get_name()
-        ]);
+        ];
     }
 }

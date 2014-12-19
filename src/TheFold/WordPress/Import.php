@@ -64,10 +64,12 @@ class Import
 
             $core['ID'] = $ID;
         }
+        
+        $ID = wp_insert_post($core, true);
 
-
-        if (!$ID = wp_insert_post($core))
-            throw new \Exception('Unable to insert post');
+        if (is_wp_error($ID)){
+            throw new \Exception($ID->get_error_message());
+        }
 
         foreach ($post_data as $key => $value) {
             update_post_meta($ID, $key, $value );
