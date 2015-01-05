@@ -18,9 +18,6 @@ class Map extends \TheFold\Page\Component{
             
                 $query['bounds'][$this->field] = urldecode($_GET[$this->get_name()]['bounds']);
             }
-            else { // todo move to child class
-                $query['bounds'][$this->field] = '-47.142813,156.314437,-33.849624,-170.287126';
-            }
 
             return $query;
         });
@@ -73,6 +70,7 @@ class Map extends \TheFold\Page\Component{
         ];
 
         $rows = [];
+        $row = [];
 
         foreach($this->posts as $marker){
 

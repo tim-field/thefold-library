@@ -269,6 +269,11 @@ class Solr implements Engine{
      return $return;
  }
 
+ function get_stats()
+ {
+    return $this->last_resultset->getStats();
+ }
+
  function get_count()
  {
      return $this->result_count;
@@ -800,18 +805,25 @@ class Solr implements Engine{
          }
      }
 
+     if(!empty($params['stats'])) {
+
+         $stats = $query->getStats();
+
+         foreach($params['stats']['fields'] as $field){
+            
+             $stat_field = $stats->createField($field);
+
+             foreach($params['stats']['facets'] as $facet){
+                $stat_field->addFacet($facet);
+             }
+         }
+     }
+
      //Auto query field facets
-     foreach($this->facets(true) as $name => $facet) {
+     foreach($this->facets(true) as $facet) {
 
-         $value = null;  
-
-         if(!empty($params['facets'][$name])) {
-            $value = $params['facets'][$name];
-         }
-         //Auto pull from get if avaiable. Hacky? Useful tho
-         elseif(!empty($_GET[$name])){ 
-            $value = urldecode($_GET[$name]);
-         }
+         $value = $facet->get_value($params);
+         $name = $facet->get_filter_name();
 
          if(!is_null($value)) {
              $query->createFilterQuery($name)

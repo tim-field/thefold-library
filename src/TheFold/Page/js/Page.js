@@ -29,7 +29,7 @@ function TheFoldPage(attributes) {
         }
     };
 
-    this.update = function(trigger){
+    this.update = function(trigger, callback){
 
         this.trigger = trigger;
 
@@ -55,8 +55,13 @@ function TheFoldPage(attributes) {
                     }
                 }
             }
-
+            
+            if(typeof callback === 'function'){
+                callback();
+            }
+            
             _this.trigger = '';
+
         });
     };
 

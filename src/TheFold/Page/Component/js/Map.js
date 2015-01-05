@@ -11,7 +11,6 @@ function TheFoldPageComponentMap(config) {
 
         this.foldMap = new theFoldGoogleMap(config);
         this.foldMap.renderMap( jQuery(this.selector) );
-        this.foldMap.markerClusterer.repaint()
         
         var update = _.throttle(function(e){
 
@@ -83,7 +82,8 @@ function TheFoldPageComponentMap(config) {
 
         if(this.userEvent){
             params = {
-                bounds: this.foldMap.map.getBounds().toUrlValue()
+                bounds: this.foldMap.map.getBounds().toUrlValue(),
+                zoom: this.foldMap.map.getZoom()
             };
         }
 

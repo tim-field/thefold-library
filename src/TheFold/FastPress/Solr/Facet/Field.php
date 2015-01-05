@@ -3,14 +3,18 @@ namespace TheFold\FastPress\Solr\Facet;
 
 class Field extends \TheFold\FastPress\Solr\Facet{
 
-    public $field;
-    public $label;
+    protected $field;
+    protected $label;
     protected $excludes;
 
     function __construct($field, $label='', $excludes=[]){
         $this->field = $field;
         $this->label = $label;
         $this->excludes = array_merge([$this->field],(array) $excludes);
+    }
+
+    function get_field(){
+        return $this->field;
     }
 
     function get_name(){
@@ -29,6 +33,6 @@ class Field extends \TheFold\FastPress\Solr\Facet{
 
     function apply($value){
 
-       return \TheFold\FastPress\Solr::create_query_string($this->field, $value); 
+       return \TheFold\FastPress\Solr::create_query_string($this->get_filter_name(), $value); 
     }
 }

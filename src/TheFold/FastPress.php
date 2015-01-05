@@ -159,6 +159,11 @@ class FastPress implements Engine
         return $this->engine->get_facet($name,$qparams,$reuse);
     }
 
+    function get_stats()
+    {
+        return $this->engine->get_stats();
+    }
+
     function get_count()
     {
         return $this->engine->get_count();

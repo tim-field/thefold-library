@@ -1,7 +1,7 @@
 function TheFoldComponentFacet(config) {
 
     this.$el = null;
-    this.name = 'facet';
+    this.name = config.name;
 
     this.init = function(page) {
 
@@ -20,17 +20,6 @@ function TheFoldComponentFacet(config) {
 
     this.getEndpointParams = function() {
 
-        var value, params = {};
-
-        this.$el.each(function(){
-
-            var select = jQuery(this);
-
-            if (value = select.val()) {
-                params[select.attr('name')] = value;
-            }
-        });
-
-        return params;
+        return this.$el.val();
     };
 }
