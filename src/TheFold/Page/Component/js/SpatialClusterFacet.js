@@ -11,6 +11,10 @@ function TheFoldPageComponentMap(config) {
     
     this.init = function(page) {
 
+        if(config.styles){
+            config.styles = window[config.styles];
+        }
+
         this.page = page;
         this.foldMap = new theFoldGoogleMap(config);
         this.foldMap.renderMap( jQuery(this.selector) );
@@ -74,8 +78,6 @@ function TheFoldPageComponentMap(config) {
                 zoom: this.foldMap.map.getZoom()
             };
         }
-                        
-        console.log('zoom' + this.foldMap.map.getZoom());
 
         return params;
     };
@@ -105,8 +107,6 @@ function TheFoldPageComponentMap(config) {
     this.markerInfoWindow = function() {
         var marker = this;
         jQuery.get('/marker-window/',{geohash: this.post_id}, function(html){
-            console.log(html);
-            console.log(marker.post_id);
             _this.infowindow.setContent(html);
             _this.infowindow.open( _this.foldMap.map, marker );
         });
