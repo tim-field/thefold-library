@@ -36,6 +36,10 @@ abstract class Component
                 $this->posts = [$result];
             }
 
+            elseif($result instanceof \WP_User){
+                $this->posts = [$result];
+            }
+
             else if($result instanceof \WP_Query){
                 $this->posts = $result->posts;
                 $this->wp_query = $result;
