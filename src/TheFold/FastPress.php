@@ -232,7 +232,14 @@ class FastPress implements Engine
             $url = substr($url,0,$pos);
         }
 
-        $current_page = isset($qs['page']) ? $qs['page'] : 1;
+        $current_page = 1;
+
+        if(isset($qs['page'])){
+            $current_page = $qs['page'];
+        }elseif(isset($_GET['page'])){
+            $current_page = $_GET['page'];
+        }
+        
         $total_pages = ceil($this->get_count() / $this->posts_per_page);
 
         if($total_pages > 1){

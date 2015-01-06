@@ -1,4 +1,4 @@
-function TheFoldPageComponentMap(config) {
+function TheFoldSpatialClusterFacet(config) {
 
     this.name = config.name;
     this.foldMap = null;
