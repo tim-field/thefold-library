@@ -573,7 +573,7 @@ class Solr implements Engine{
       * the get_ancestors function might be good
       */
 
-     $taxonomies = array_unique(apply_filters('fastpress_taxonomies',WordPress::get_option(FastPress::SETTING_NAMESPACE,'taxonomies')));
+     $taxonomies = array_unique(apply_filters('fastpress_taxonomies', (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'taxonomies')));
 
      if($taxonomies) foreach($taxonomies as $name) {
 
