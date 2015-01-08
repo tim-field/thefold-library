@@ -24,6 +24,8 @@ function TheFoldSpatialClusterFacet(config) {
             if(_this.ignoreIdle){
                 return;
             }
+
+            //console.log(_this.foldMap.map.getZoom());
                         
             _this.clickedMarker = null;
 
@@ -36,15 +38,15 @@ function TheFoldSpatialClusterFacet(config) {
 
     this.update = function(markers) {
         
-        var current_level = markers[0].level;
-
-        jQuery.each(this.foldMap.markers, function(post_id, marker){
-
-            if(marker.level != current_level){
-
-                _this.foldMap.deleteMarker(post_id);
-            }
-        });
+        var existing_ids = _.keys(this.foldMap.markers),
+            new_ids = markers.map(function(marker){
+                return marker.post_id;
+            }),
+            to_delete = _.difference(existing_ids, new_ids); 
+        
+        for (var i=0; i<to_delete.length; i++) {
+            this.foldMap.deleteMarker(to_delete[i]);
+        }
 
         for ( var i=0, len=markers.length ; i<len ; i++ ) {
 
@@ -86,6 +88,14 @@ function TheFoldSpatialClusterFacet(config) {
      * Added to google.maps.event.addListener, see the addMarker call in this.update
      */
     this.markerGeohashZoom = function() {
+        
+        //console.log(this.post_id);
+        //_this.foldMap.map.setCenter(this.);
+        _this.foldMap.map.panTo(this.getPosition());
+        _this.foldMap.map.setZoom(_this.foldMap.map.getZoom() + 1);
+    };
+
+    this.markerGeohash = function() {
         
         _this.clickedMarker = this;
         

@@ -84,7 +84,9 @@ class Solr implements Engine{
  //interface 
  function index_post(\WP_Post $post)
  {
-     if(in_array($post->post_type, (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_types'))) {
+     $post_types = (array) apply_filters('fastpress_post_types', WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_types'));
+
+     if(in_array($post->post_type, $post_types)) {
 
          $this->update_post($post);
 
@@ -571,75 +573,75 @@ class Solr implements Engine{
       * the get_ancestors function might be good
       */
 
-    $taxonomies = WordPress::get_option(FastPress::SETTING_NAMESPACE,'taxonomies');
+     $taxonomies = array_unique(apply_filters('fastpress_taxonomies',WordPress::get_option(FastPress::SETTING_NAMESPACE,'taxonomies')));
 
-    if($taxonomies) foreach($taxonomies as $name) {
+     if($taxonomies) foreach($taxonomies as $name) {
 
-        $taxonomie = get_taxonomy($name);
+         $taxonomie = get_taxonomy($name);
 
-        // Index category and tag names
-        $post_mapping[$taxonomie->name.'_txt'] = function($post) use ($taxonomie) {
+         // Index category and tag names
+         $post_mapping[$taxonomie->name.'_txt'] = function($post) use ($taxonomie) {
 
-            $names = null;
+             $names = null;
 
-            if ($terms = get_the_terms($post,$taxonomie->name))
-            {
-                $names = [];
+             if ($terms = get_the_terms($post,$taxonomie->name))
+             {
+                 $names = [];
 
-                foreach($terms as $term) {
-                    $names[] = $term->name;
-                }
-            }
+                 foreach($terms as $term) {
+                     $names[] = $term->name;
+                 }
+             }
 
-            return $names;
-        };
+             return $names;
+         };
 
-        
-        // Index category and tag slugs
-        $post_mapping[$taxonomie->name.'_taxonomy'] = function($post) use ($taxonomie) {
 
-            $names = null;
+         // Index category and tag slugs
+         $post_mapping[$taxonomie->name.'_taxonomy'] = function($post) use ($taxonomie) {
 
-            if ($terms = get_the_terms($post,$taxonomie->name))
-            {
-                $names = [];
+             $names = null;
 
-                foreach($terms as $term) {
-                    
-                    $names[] = $term->slug;
-                    
-                    if($taxonomie->name === 'category'){
+             if ($terms = get_the_terms($post,$taxonomie->name))
+             {
+                 $names = [];
 
-                        $names = array_merge($names, explode('/',get_category_parents($term->term_id, false,'/', true)));
-                    }
-                }
+                 foreach($terms as $term) {
 
-                $names = array_unique(array_filter($names));
-            }
+                     $names[] = $term->slug;
 
-            return $names;
-        };
+                     if($taxonomie->name === 'category'){
 
-        // Index taxonomy ancestor path
-        if(is_taxonomy_hierarchical($taxonomie->name)){
+                         $names = array_merge($names, explode('/',get_category_parents($term->term_id, false,'/', true)));
+                     }
+                 }
 
-            $post_mapping[$taxonomie->name.'_ancestors'] = function($post) use ($taxonomie) {
+                 $names = array_unique(array_filter($names));
+             }
 
-                $paths = [];
+             return $names;
+         };
 
-                if ($terms = get_the_terms($post,$taxonomie->name)) {
+         // Index taxonomy ancestor path
+         if(is_taxonomy_hierarchical($taxonomie->name)){
 
-                    foreach($terms as $term) {
-                        $paths[] = Wordpress::get_term_parents((int)$term->term_id, $taxonomie->name ,false, '/', true);
-                    }
-                }
+             $post_mapping[$taxonomie->name.'_ancestors'] = function($post) use ($taxonomie) {
 
-                return $paths;
-            };
-        }
-    }
+                 $paths = [];
 
-    return $post_mapping;
+                 if ($terms = get_the_terms($post,$taxonomie->name)) {
+
+                     foreach($terms as $term) {
+                         $paths[] = Wordpress::get_term_parents((int)$term->term_id, $taxonomie->name ,false, '/', true);
+                     }
+                 }
+
+                 return $paths;
+             };
+         }
+     }
+
+     return $post_mapping;
  }
 
 

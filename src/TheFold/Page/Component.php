@@ -22,7 +22,9 @@ abstract class Component
         return $this->name;
     }
     
-    function render(){ return '';}
+    function render(){
+        ;
+    }
 
     function json(){ ob_start(); $this->render(); return ob_get_clean(); }
    

@@ -106,12 +106,22 @@ class SpatialClusterFacet extends Facet{
 
     protected function zoom_to_geohash_length($zoom)
     {
-        if ($zoom <= 5)  return 1;
+        /*if ($zoom <= 5)  return 1;
         elseif ($zoom <= 7) return 2;
         elseif ($zoom <= 9) return 3;
         elseif ($zoom <= 10) return 4;
         elseif ($zoom <= 15) return 5;
-        else return 6;
+        else return 6;*/
+        $length = 6;
+
+        if ($zoom <= 4) $length = 0;
+        else if ($zoom <= 5) $length = 1;
+        else if ($zoom <= 8) $length = 2;
+        else if ($zoom <= 10) $length = 3;
+        else if ($zoom <= 12) $length = 4;
+        else if ($zoom <= 13) $length = 5;
+        
+        return $length;
     }
     
     function json()
@@ -141,7 +151,7 @@ class SpatialClusterFacet extends Facet{
 
         foreach($this->facet_values as $geohash => $count){
 
-            $markers[$geohash]['post_id'] = $geohash;
+            $markers[$geohash]['post_id'] = $geohash.'-'.$count;
             $markers[$geohash]['level'] = strlen($geohash);
             $markers[$geohash]['count'] = $count;
         }
@@ -174,7 +184,7 @@ class SpatialClusterFacet extends Facet{
         $count = intval($count);
 
         // get a value between 1 and 5 for the different marker sizes
-        $image_number = min(max(round($count / 10),1),5);
+        $image_number = min(max(round($count / 20),1),5);
 
         $dir = isset($params['imagedir']) ? $params['imagedir'] : get_stylesheet_directory().'/images/cluster/';
         $cachedir = isset($params['cachedir']) ? $params['cachedir'] : $dir.'cache/';
@@ -190,12 +200,17 @@ class SpatialClusterFacet extends Facet{
             $imagepath = $dir.$image;
             
             $font = isset($params['font']) ? $params['font'] : 'OpenSans-Semibold.ttf';
-            $fontsize = (isset($params['fontsize']) ? $params['fontsize'] : 12) + $image_number;
+            $fontsize = (isset($params['fontsize']) ? $params['fontsize'] : 12);// + $image_number;
             $text = $count;
 
             $fontpath = $dir.$font;
 
             $im = imagecreatefrompng( $imagepath );
+
+            if(!$im){
+                throw new \Exception('Unable to read path '.$imagepath);
+            }
+
             imagesavealpha($im, true);
 
             // find the size of the image

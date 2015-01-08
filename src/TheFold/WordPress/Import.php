@@ -65,7 +65,7 @@ class Import
             $core['ID'] = $ID;
         }
         
-        $ID = wp_insert_post($core, true);
+        $ID = empty($core['ID']) ? wp_insert_post($core, true) : wp_update_post($core, true); 
 
         if (is_wp_error($ID)){
             throw new \Exception($ID->get_error_message());
