@@ -7,6 +7,11 @@ class SpatialClusterFacet extends Facet{
     protected $stats;
     protected $markers;
     protected $field = 'location_p';
+    protected $config = [];  
+
+    function __construct($config=[]){
+       $this->config = $config; 
+    }
   
     function get_js_path()
     {
@@ -38,9 +43,12 @@ class SpatialClusterFacet extends Facet{
 
         $config = [
             'selector' => '.acf-map',
-            'name' => $this->get_js_handle(),
-            'singleMarkerIcon' => get_stylesheet_directory_uri().'/images/cluster/single.png'
+            'name' => $this->get_js_handle()
         ];
+
+        if(isset($this->config['singleMarkerIcon'])){
+            $config['singleMarkerIcon'] = $this->config['singleMarkerIcon'];
+        }
 
         if(wp_script_is('mapstyle', 'registered')){
 
@@ -155,6 +163,7 @@ class SpatialClusterFacet extends Facet{
             $markers[$geohash]['post_id'] = $geohash.'-'.$count;
             $markers[$geohash]['level'] = strlen($geohash);
             $markers[$geohash]['count'] = $count;
+            $markers[$geohash]['geohash'] = $geohash;
         }
 
         return array_values($markers);        

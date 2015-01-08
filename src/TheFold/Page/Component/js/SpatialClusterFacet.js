@@ -63,7 +63,7 @@ function TheFoldSpatialClusterFacet(config) {
                     markers[i].post_id, 
                     markers[i].html, 
                     markers[i],
-                    [ markers[i].count > 1 ? this.markerGeohashZoom : this.markerInfoWindow ]
+                    [ markers[i].count > 1 ? this.markerZoom : this.markerInfoWindow ]
             );
         }
     };
@@ -74,7 +74,7 @@ function TheFoldSpatialClusterFacet(config) {
 
         if(this.clickedMarker){
             params = {
-                geohash: this.clickedMarker.post_id
+                geohash: this.clickedMarker.geohash
             }
         }
         else {
@@ -90,12 +90,12 @@ function TheFoldSpatialClusterFacet(config) {
     /**
      * Added to google.maps.event.addListener, see the addMarker call in this.update
      */
-    this.markerGeohashZoom = function() {
+    this.markerZoom = function() {
         
         //console.log(this.post_id);
         //_this.foldMap.map.setCenter(this.);
         _this.foldMap.map.panTo(this.getPosition());
-        _this.foldMap.map.setZoom(_this.foldMap.map.getZoom() + 1);
+        _this.foldMap.map.setZoom(_this.foldMap.map.getZoom() + 2);
     };
 
     this.markerGeohash = function() {
@@ -119,7 +119,7 @@ function TheFoldSpatialClusterFacet(config) {
      */
     this.markerInfoWindow = function() {
         var marker = this;
-        jQuery.get('/marker-window/',{geohash: this.post_id}, function(html){
+        jQuery.get('/marker-window/',{geohash: this.geohash}, function(html){
             _this.infowindow.setContent(html);
             _this.infowindow.open( _this.foldMap.map, marker );
         });
