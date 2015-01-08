@@ -53,6 +53,9 @@ function TheFoldSpatialClusterFacet(config) {
             if(markers[i].count > 1) {
                 markers[i].icon = '/marker-image/?count='+markers[i].count;
             }
+            else if(config.singleMarkerIcon) {
+                markers[i].icon = config.singleMarkerIcon;
+            }
 
             this.foldMap.addMarker(
                     markers[i].lat, 

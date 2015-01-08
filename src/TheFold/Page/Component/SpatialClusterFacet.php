@@ -38,7 +38,8 @@ class SpatialClusterFacet extends Facet{
 
         $config = [
             'selector' => '.acf-map',
-            'name' => $this->get_js_handle()
+            'name' => $this->get_js_handle(),
+            'singleMarkerIcon' => get_stylesheet_directory_uri().'/images/cluster/single.png'
         ];
 
         if(wp_script_is('mapstyle', 'registered')){
