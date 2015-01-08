@@ -944,9 +944,9 @@ class Solr implements Engine{
 
         case 'WP_Post':
             return get_post($id);
-    }  
+    }
 
-    throw new Exception('Unknown class '.$class);
+    throw new \Exception('Unknown class '.$class);
  }
 
  /**

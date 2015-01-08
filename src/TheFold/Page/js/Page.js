@@ -1,6 +1,6 @@
-function TheFoldPage(attributes) {
+function TheFoldPage(config) {
 
-    var attrs = attributes || {};
+    var config = config || {};
 
     this.components = {};
     this.endpoint = null;
@@ -18,16 +18,17 @@ function TheFoldPage(attributes) {
 
         var name;
 
-        if(typeof attrs === 'string'){
-            this.endpoint = attrs;
+        if(typeof config === 'string'){
+            this.endpoint = config;
         }
-        else if(typeof attrs === 'object'){
-            _.extend(this,attrs);
+        else if(typeof conf === 'object'){
+            _.extend(this,config);
         }
 
         for(name in this.components){
             this.components[name].init(this);
         }
+
     };
 
     this.update = function(trigger, callback){
@@ -58,7 +59,7 @@ function TheFoldPage(attributes) {
             if(typeof callback === 'function'){
                 callback();
             }
-            
+
             _this.trigger = '';
 
         });
