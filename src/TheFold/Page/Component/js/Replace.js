@@ -4,7 +4,7 @@ function TheFoldComponentReplace(config) {
     this.name = config.name;
     this.$paging = null;
     this.page_number = null;
-    _this = this;
+    var _this = this;
 
     this.init = function(page) {
 

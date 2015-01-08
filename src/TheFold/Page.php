@@ -30,12 +30,12 @@ abstract class Page extends Page\Component{
 
     function get_facets()
     { 
-        return array_map(function($component){
+        return array_filter(array_map(function($component){
             
             if ($component instanceof Page\Component\Facet) {
                 return $component->get_facet();
             }
-        }, $this->components);
+        }, $this->components));
     }
     
     function get_js_path()

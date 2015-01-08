@@ -5,6 +5,7 @@ function TheFoldPage(attributes) {
     this.components = {};
     this.endpoint = null;
     this.trigger = '';
+    var _this = this;
 
     this.addComponent = function(component, name) {
 
@@ -35,8 +36,6 @@ function TheFoldPage(attributes) {
 
         //Fetch the query string params from each of our components
         var params = this.getEndpointParams();
-
-        var _this = this;
 
         jQuery.getJSON(this.ajaxurl, params).done(function(json){
 

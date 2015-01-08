@@ -26,6 +26,7 @@ abstract class Component
         ;
     }
 
+    //TODO don't depend on this I want to remove it, should return empty string by default
     function json(){ ob_start(); $this->render(); return ob_get_clean(); }
    
     //function subscribe(\TheFold\Publication $publication)

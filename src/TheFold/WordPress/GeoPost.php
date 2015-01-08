@@ -30,9 +30,20 @@ trait GeoPost {
         return get_post_meta($post_id,$this->geocode_field,true) ?: [];
     }
 
-    function get_geohash($post_id)
+    function get_geohash($post_id, $build=false, $force=false)
     {
-        return get_post_meta($post_id,$this->geohash_field,true) ?: null;
+        $geohash = get_post_meta($post_id,$this->geohash_field,true);
+            
+        if($force || (!$geohash && $build)){
+
+            if($latlng = $this->get_latlng($post_id)){
+
+                $geohash = $this->geohash($latlng);
+                update_post_meta($post_id, $this->geohash_field, $geohash); 
+            };
+        }
+
+        return $geohash;
     }
 
     function parse_location($post_id, $raw_address, $force=false)
@@ -63,11 +74,7 @@ trait GeoPost {
             }
         }
 
-        if(($latlng = $this->get_latlng($post_id)) && ( $force || !$geohash = $this->get_geohash($post_id) )){
-
-            $geohash = $this->geohash($latlng);
-            update_post_meta($post_id, $this->geohash_field, $geohash); 
-        };
+        $this->get_geohash($post_id, true, $force);
     }
 
     function solr_geo_mapping($mapping)
@@ -109,7 +116,7 @@ trait GeoPost {
 
                 if($post->post_type === self::TYPE) {
 
-                    if($geohash = $this->get_geohash($post->ID)){
+                    if($geohash = $this->get_geohash($post->ID, true)){
                         $value = substr($geohash, 0, $level);                    
                     }
                 }
