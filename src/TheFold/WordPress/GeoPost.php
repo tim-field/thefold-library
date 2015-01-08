@@ -11,6 +11,7 @@ trait GeoPost {
 
     protected $geotools;
     protected $geocoder;
+    protected $formatter;
     
     function get_latlng($post_id){
 
