@@ -585,7 +585,7 @@ class Solr implements Engine{
          $taxonomie = get_taxonomy($name);
 
          // Index category and tag names
-         $post_mapping[$taxonomie->name.'_txt'] = function($post) use ($taxonomie) {
+         $post_mapping[$taxonomie->name.'_ss'] = function($post) use ($taxonomie) {
 
              $names = null;
 
