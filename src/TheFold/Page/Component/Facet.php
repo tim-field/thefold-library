@@ -73,7 +73,13 @@ abstract class Facet extends \TheFold\Page\Component{
 
     protected function set_facet_values($facet_values)
     {
-        return $this->facet_values = $facet_values[$this->facet->get_name()] ?: [];
+        if(isset($facet_values[$this->facet->get_name()])){
+            $this->facet_values = $facet_values[$this->facet->get_name()];
+        }
+        else {
+            $this->facet_values = [];
+        }
+        return $this->facet_values;
     }
 
     protected function get_query_value()

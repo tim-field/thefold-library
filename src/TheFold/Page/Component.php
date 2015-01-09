@@ -73,7 +73,7 @@ abstract class Component
 
     function get_js_deps(){return [];}
 
-    function get_js_config(){ return [];}
+    function get_js_config(){ return ['name'=>$this->get_name()];}
 
     function get_js_path()
     {

@@ -137,33 +137,37 @@ class SpatialClusterFacet extends Facet{
     {
         $markers = [];
 
-        if($statsResult = \FastPress\get_stats())
+        if($this->facet_values)
         {
-            //Aggregates average lat and lng fields for each marker, see set_query_value function
-            //above which initaites the stats component on the geohash facet
-            foreach(['lat_d'=>'lat','lng_d'=>'lng'] as $solr_field => $field) {
 
-                $facetStats = $statsResult->getResult($solr_field)->getFacets();
+            if($statsResult = \FastPress\get_stats())
+            {
+                //Aggregates average lat and lng fields for each marker, see set_query_value function
+                //above which initaites the stats component on the geohash facet
+                foreach(['lat_d'=>'lat','lng_d'=>'lng'] as $solr_field => $field) {
 
-                foreach($facetStats as $geohash_field => $facetValue){
+                    $facetStats = $statsResult->getResult($solr_field)->getFacets();
 
-                    foreach($facetValue as $geohash => $facetValue){
+                    foreach($facetStats as $geohash_field => $facetValue){
 
-                        if(empty($geohash)) continue;
+                        foreach($facetValue as $geohash => $facetValue){
 
-                        $markers[$geohash][$field] = $facetValue->getMean();
+                            if(empty($geohash)) continue;
+
+                            $markers[$geohash][$field] = $facetValue->getMean();
+                        }
                     }
                 }
             }
-        }
 
 
-        foreach($this->facet_values as $geohash => $count){
+            foreach($this->facet_values as $geohash => $count){
 
-            $markers[$geohash]['post_id'] = $geohash.'-'.$count;
-            $markers[$geohash]['level'] = strlen($geohash);
-            $markers[$geohash]['count'] = $count;
-            $markers[$geohash]['geohash'] = $geohash;
+                $markers[$geohash]['post_id'] = $geohash.'-'.$count;
+                $markers[$geohash]['level'] = strlen($geohash);
+                $markers[$geohash]['count'] = $count;
+                $markers[$geohash]['geohash'] = $geohash;
+            }
         }
 
         return array_values($markers);        

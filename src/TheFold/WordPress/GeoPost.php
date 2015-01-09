@@ -44,7 +44,7 @@ trait GeoPost {
                     update_post_meta($post_id, $this->geohash_field, $geohash); 
                 } catch (\Exception $e){
                     
-                    user_error($e->getMessage().' latlng:'.$latlng, E_USER_WARNING);    
+                    //user_error($e->getMessage().' latlng:'.$latlng, E_USER_WARNING);    
                 }
             };
         }
