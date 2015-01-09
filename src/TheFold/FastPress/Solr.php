@@ -328,7 +328,7 @@ class Solr implements Engine{
      { 
          if(!is_array($data)){
              //already processed ? 
-             user_error('Already processed ? Why is this happening',E_USER_ERROR);
+             user_error('Already processed ? Why is this happening',E_USER_WARNING);
              continue; 
          }
 
