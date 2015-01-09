@@ -39,8 +39,13 @@ trait GeoPost {
 
             if($latlng = $this->get_latlng($post_id)){
 
-                $geohash = $this->geohash($latlng);
-                update_post_meta($post_id, $this->geohash_field, $geohash); 
+                try{
+                    $geohash = $this->geohash($latlng);
+                    update_post_meta($post_id, $this->geohash_field, $geohash); 
+                } catch (\Exception $e){
+                    
+                    user_error($e->getMessage().' latlng:'.$latlng, E_USER_WARNING);    
+                }
             };
         }
 
