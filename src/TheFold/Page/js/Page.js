@@ -43,7 +43,7 @@ function TheFoldPage(config) {
         if(this.$loadingEl){
             loadingTimeout = setTimeout(function(){
                 _this.$loadingEl.addClass('is-loading');
-            },300);
+            },600);
         }
 
         //Fetch the query string params from each of our components
