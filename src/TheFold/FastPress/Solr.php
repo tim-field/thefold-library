@@ -358,7 +358,7 @@ class Solr implements Engine{
                 $solr_post->addField($field,$value);
              }
 
-             $this->pending_updates[$solr_id] = $solr_post
+             $this->pending_updates[$solr_id] = $solr_post;
          }
          else{
             unset($this->pending_updates[$solr_id]);
