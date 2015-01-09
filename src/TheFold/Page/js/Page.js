@@ -4,6 +4,7 @@ function TheFoldPage(config) {
 
     this.components = {};
     this.endpoint = null;
+    this.$loadingEl = null;
     this.trigger = '';
     var _this = this;
 
@@ -29,11 +30,21 @@ function TheFoldPage(config) {
             this.components[name].init(this);
         }
 
+        if(config.loadingEl){
+            this.$loadingEl = jQuery(config.loadingEl);
+        }
     };
 
     this.update = function(trigger, callback){
 
         this.trigger = trigger;
+        var loadingTimeout = null;
+
+        if(this.$loadingEl){
+            loadingTimeout = setTimeout(function(){
+                _this.$loadingEl.addClass('is-loading');
+            },300);
+        }
 
         //Fetch the query string params from each of our components
         var params = this.getEndpointParams();
@@ -60,6 +71,15 @@ function TheFoldPage(config) {
                 callback();
             }
 
+            if(_this.$loadingEl){
+                
+                if(loadingTimeout){
+                    clearTimeout(loadingTimeout);
+                }
+
+                _this.$loadingEl.removeClass('is-loading');
+            }
+            
             _this.trigger = '';
 
         });
