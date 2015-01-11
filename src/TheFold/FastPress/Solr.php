@@ -922,8 +922,8 @@ class Solr implements Engine{
 
      return [
          'endpoint' => [
-             'localhost' => [
-                 'hostname' => $this->hostname,
+             $this->hostname => [
+                 'host' => $this->hostname,
                  'port'     => $this->port,
                  'path' =>  $this->path
              ]
