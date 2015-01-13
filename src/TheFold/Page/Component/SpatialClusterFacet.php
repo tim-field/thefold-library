@@ -50,6 +50,10 @@ class SpatialClusterFacet extends Facet{
             $config['singleMarkerIcon'] = $this->config['singleMarkerIcon'];
         }
 
+        if(isset($this->config['markerCountUrl'])){
+            $config['markerCountUrl'] = $this->config['markerCountUrl'];
+        }
+
         if(wp_script_is('mapstyle', 'registered')){
 
             $config['styles']='MapStyle';
@@ -195,13 +199,13 @@ class SpatialClusterFacet extends Facet{
     {
         header('Pragma: public');
         header('Cache-Control: max-age=86400');
-        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Expires: '. date(DATE_RFC822,strtotime("7 day")));
         header("Content-type: image/png");
         
         $count = intval($count);
 
         // get a value between 1 and 5 for the different marker sizes
-        $image_number = min(max(round($count / 20),1),5);
+        $image_number = min(max(round($count / 30),1),5);
 
         $dir = isset($params['imagedir']) ? $params['imagedir'] : get_stylesheet_directory().'/images/cluster/';
         $cachedir = isset($params['cachedir']) ? $params['cachedir'] : $dir.'cache/';

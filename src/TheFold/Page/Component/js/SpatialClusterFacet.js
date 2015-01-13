@@ -51,7 +51,7 @@ function TheFoldSpatialClusterFacet(config) {
         for ( var i=0, len=markers.length ; i<len ; i++ ) {
 
             if(markers[i].count > 1) {
-                markers[i].icon = '/marker-image/?count='+markers[i].count;
+                markers[i].icon = config.markerCountUrl ? config.markerCountUrl.replace('{count}',markers[i].count) : '/marker-image/?count='+markers[i].count;
             }
             else if(config.singleMarkerIcon) {
                 markers[i].icon = config.singleMarkerIcon;
