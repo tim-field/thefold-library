@@ -27,7 +27,11 @@ class Export
         
         $have_switched = false;
 
-        if(is_multisite() && $object instanceof \WP_Post && $object->blogid != get_current_blog_id()){
+        if(is_multisite() && 
+            $object instanceof \WP_Post && 
+            !empty($object->blogid) &&
+            $object->blogid != get_current_blog_id()
+        ){
             switch_to_blog($object->blogid); 
             $have_switched = true;
         }
