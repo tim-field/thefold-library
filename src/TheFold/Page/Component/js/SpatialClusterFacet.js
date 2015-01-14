@@ -21,7 +21,7 @@ function TheFoldSpatialClusterFacet(config) {
         
         var update = _.throttle(function(e){
 
-            if(_this.ignoreIdle){
+            if(_this.ignoreIdle || _this.foldMap.centeringMap){
                 return;
             }
 

@@ -7,7 +7,8 @@ class SpatialClusterFacet extends Facet{
     protected $stats;
     protected $markers;
     protected $field = 'location_p';
-    protected $config = [];  
+    protected $config = []; 
+    protected $version = 2;
 
     function __construct($config=[]){
        $this->config = $config; 

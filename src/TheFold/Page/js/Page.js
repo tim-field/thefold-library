@@ -15,6 +15,13 @@ function TheFoldPage(config) {
         this.components[name]=component;
     };
 
+    this.getComponent = function(name){
+
+        if(typeof this.components[name] != 'undefined'){
+            return this.components[name];
+        }
+    }
+
     this.init = function() {
 
         var name;
