@@ -200,7 +200,7 @@ class SpatialClusterFacet extends Facet{
     {
         header('Pragma: public');
         header('Cache-Control: max-age=86400');
-        header('Expires: '. date(DATE_RFC822,strtotime("7 day")));
+        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
         header("Content-type: image/png");
         
         $count = intval($count);
