@@ -16,7 +16,7 @@ class SpatialClusterFacet extends Facet{
   
     function get_js_path()
     {
-        return trim($this->plugin_url,'/').'/js/components/'.$this->get_js_handle().'.js';
+        return trim($this->plugin_url,'/').'/js/components/'.$this->get_name().'.js';
     }
 
     function get_js_handle()
@@ -133,7 +133,7 @@ class SpatialClusterFacet extends Facet{
         else if ($zoom <= 8) $length = 2;
         else if ($zoom <= 10) $length = 3;
         else if ($zoom <= 12) $length = 4;
-        else if ($zoom <= 13) $length = 5;
+        else if ($zoom <= 13) $length = 6;//was 5
         
         return $length;
     }
