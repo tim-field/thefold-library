@@ -72,11 +72,16 @@ class SpatialClusterFacet extends Facet{
             if(isset($_GET[$this->get_name()]['geohash'])) {
                 $level = strlen($_GET[$this->get_name()]['geohash']);
             }
+            elseif(isset($_GET['ResultList']['geohash'])){
+                $level = 6; // Hack here.  So when clicking on result list this'll be pased a full geohash ( 7 chars )
+                // we need to display facets at 6 chars so this marker continues to show. 
+            }
             elseif(isset($_GET[$this->get_name()]['zoom'])) { //could use bounds for this instead
                 $level = $this->zoom_to_geohash_length((int) $_GET[$this->get_name()]['zoom']);  
             }
 
-            $facet_field = 'geohash_'.($level + 1).'_s';
+            // only makes sense to facet to at most one level below gehash max - I think
+            $facet_field = 'geohash_'.min($level + 1, 6).'_s';
 
             $this->facet = new \TheFold\FastPress\Solr\Facet\Geohash($facet_field,'Geohash');
         }
