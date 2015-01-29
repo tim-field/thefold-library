@@ -19,7 +19,7 @@ function TheFoldSpatialClusterFacet(config) {
         this.foldMap = new theFoldGoogleMap(config);
         this.foldMap.renderMap( jQuery(this.selector) );
         
-        var update = _.throttle(function(e){
+        var update = _.debounce(function(e){
 
             if(_this.ignoreIdle || _this.foldMap.centeringMap){
                 return;
@@ -31,7 +31,7 @@ function TheFoldSpatialClusterFacet(config) {
 
             _this.page.update(_this.name);
 
-        },1000);
+        },800);
 
         google.maps.event.addListener(this.foldMap.map, 'idle', update);
     };
