@@ -31,7 +31,7 @@ function TheFoldSpatialClusterFacet(config) {
 
             _this.page.update(_this.name);
 
-        },800);
+        },300);
 
         google.maps.event.addListener(this.foldMap.map, 'idle', update);
     };
