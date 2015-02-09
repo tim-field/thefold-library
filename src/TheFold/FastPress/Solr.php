@@ -714,6 +714,7 @@ class Solr implements Engine{
      $params = array_merge($default_params, $params);
 
      $query = $this->get_query();
+     $helper = $query->getHelper();
 
      //$query->setFields(array('id'));
 
@@ -723,7 +724,15 @@ class Solr implements Engine{
      }
 
      if(isset($params['query'])){
-        $query->setQuery($params['query']);
+
+         $query_param = $params['query'];
+
+         $query->setQuery(
+
+             $query_param instanceof \Closure 
+             ? $query_param($helper, $query)
+             : $query_param
+         );
      }
 
      if(isset($params['post_status'])){
@@ -797,6 +806,8 @@ class Solr implements Engine{
 
      $params['fields'] = array_merge(array_intersect_key($params,array_flip($this->core_post_fields)), (array) $params['fields']);
 
+
+     //TODO should be called filter query
      if(!empty($params['fields'])) {
         
          foreach($params['fields'] as $field => $value) {
@@ -807,8 +818,42 @@ class Solr implements Engine{
      }
 
      if(!empty($params['fq'])) {
+
          foreach($params['fq'] as $name => $facet_query) {
-             $query->createFilterQuery($name)->setQuery($facet_query);
+             
+             $query->createFilterQuery($name)->setQuery(
+                 
+                 $facet_query instanceof \Closure 
+                 ? $facet_query($helper, $query)
+                 : $facet_query
+             );
+         }
+     }
+   
+     //add field
+     if(!empty($params['fl'])){
+
+         foreach($params['fl'] as $field) {
+
+             $query->addField(
+
+                 $field instanceof \Closure 
+                 ? $field($helper, $query)
+                 : $field
+             );
+         }
+     }
+
+     if(!empty($params['params'])){
+
+         foreach($params['params'] as $field => $value) {
+
+             $query->addParam( $field, 
+
+                 $value instanceof \Closure 
+                 ? $value($helper, $query)
+                 : $value
+             );
          }
      }
 

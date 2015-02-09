@@ -15,17 +15,23 @@ function TheFoldSpatialClusterFacet(config) {
             config.styles = window[config.styles];
         }
 
+        if(config.map){
+            this.foldMap = config.map
+        }else{
+            this.foldMap = new theFoldGoogleMap(config);
+            this.foldMap.renderMap( jQuery(this.selector) );
+        }
+
         this.page = page;
-        this.foldMap = new theFoldGoogleMap(config);
-        this.foldMap.renderMap( jQuery(this.selector) );
+        
         
         var update = _.debounce(function(e){
+
+            console.log(_this.foldMap.map.getZoom());
 
             if(_this.ignoreIdle || _this.foldMap.centeringMap){
                 return;
             }
-
-            //console.log(_this.foldMap.map.getZoom());
                         
             _this.clickedMarker = null;
 
@@ -38,33 +44,29 @@ function TheFoldSpatialClusterFacet(config) {
 
     this.update = function(markers) {
         
-        var existing_ids = _.keys(this.foldMap.markers),
-            new_ids = markers.map(function(marker){
-                return marker.post_id;
-            }),
-            to_delete = _.difference(existing_ids, new_ids); 
+        if(markers.length) {
         
-        for (var i=0; i<to_delete.length; i++) {
-            this.foldMap.deleteMarker(to_delete[i]);
-        }
+            this.foldMap.deleteNotIn(markers);
 
-        for ( var i=0, len=markers.length ; i<len ; i++ ) {
+            for ( var i=0, len=markers.length; i<len; i++ ) {
 
-            if(markers[i].count > 1) {
-                markers[i].icon = config.markerCountUrl ? config.markerCountUrl.replace('{count}',markers[i].count) : '/marker-image/?count='+markers[i].count;
+                if(markers[i].count > 1) {
+                    markers[i].icon = config.markerCountUrl ? config.markerCountUrl.replace('{count}',markers[i].count) : '/marker-image/?count='+markers[i].count;
+                }
+                else if(config.singleMarkerIcon) {
+                    markers[i].icon = config.singleMarkerIcon;
+                }
+
+                this.foldMap.addMarker(
+                        markers[i].lat, 
+                        markers[i].lng, 
+                        markers[i].post_id, 
+                        markers[i].html, 
+                        markers[i],
+                        [ markers[i].count > 1 ? this.markerZoom : this.markerInfoWindow ]
+                );
             }
-            else if(config.singleMarkerIcon) {
-                markers[i].icon = config.singleMarkerIcon;
-            }
 
-            this.foldMap.addMarker(
-                    markers[i].lat, 
-                    markers[i].lng, 
-                    markers[i].post_id, 
-                    markers[i].html, 
-                    markers[i],
-                    [ markers[i].count > 1 ? this.markerZoom : this.markerInfoWindow ]
-            );
         }
     };
     

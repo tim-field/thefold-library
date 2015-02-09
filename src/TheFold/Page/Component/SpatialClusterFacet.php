@@ -95,7 +95,8 @@ class SpatialClusterFacet extends Facet{
     protected function set_query_value($query){
 
         $set_stats = false;
-        
+
+        //this probably isn't used 
         if(isset($_GET[$this->get_name()]['geohash'])){
 
             $query['facets'][$this->facet->get_filter_name()] = $_GET[$this->get_name()]['geohash'];
@@ -173,6 +174,7 @@ class SpatialClusterFacet extends Facet{
 
             foreach($this->facet_values as $geohash => $count){
 
+                                //really needs to be called map id
                 $markers[$geohash]['post_id'] = $geohash.'-'.$count;
                 $markers[$geohash]['level'] = strlen($geohash);
                 $markers[$geohash]['count'] = $count;
