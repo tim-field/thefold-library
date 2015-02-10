@@ -34,26 +34,22 @@ abstract class Component
     {
         $publication->subscribe(function($result){
 
-            //seems to be sub quirk of add action that an array with one value is passed with its value
-            if($result instanceof \WP_Post){
-                $this->posts = [$result];
-            }
-
-            elseif($result instanceof \WP_User){
-                $this->posts = [$result];
-            }
-
-            else if($result instanceof \WP_Query){
+            if($result instanceof \WP_Query){
                 $this->posts = $result->posts;
                 $this->wp_query = $result;
             }
+            //seems to be sub quirk of add action that an array with one value is passed with its value
+            elseif(is_object($result)){
+            
+                $this->posts = [$result];
+            
+            } else {
 
-            else {
                 $this->posts = $result;
             }
 
         });
-    } 
+    }
  
     function get_js_name()
     {
@@ -77,6 +73,7 @@ abstract class Component
 
     function get_js_path()
     {
+        //todo should test that file exists, maybe better to pass __DIR__ here.
         return trim($this->plugin_url,'/').'/js/components/'.$this->get_name().'.js';
     }
 
