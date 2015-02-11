@@ -5,12 +5,14 @@ class Field extends \TheFold\FastPress\Solr\Facet{
 
     protected $field;
     protected $label;
+    protected $name;
     protected $excludes;
 
-    function __construct($field, $label='', $excludes=[]){
+    function __construct($field, $label='', $excludes=[],$name=''){
         $this->field = $field;
+        $this->name = $name ?: $field; //usefull if name conflicts with existing filterquery, ie post_status
         $this->label = $label;
-        $this->excludes = array_merge([$this->field],(array) $excludes);
+        $this->excludes = array_merge([$this->name],(array) $excludes);
     }
 
     function get_field(){
@@ -18,7 +20,7 @@ class Field extends \TheFold\FastPress\Solr\Facet{
     }
 
     function get_name(){
-        return $this->field;
+        return $this->name;
     }
 
     function get_label(){
@@ -26,13 +28,13 @@ class Field extends \TheFold\FastPress\Solr\Facet{
     }
 
     function create(\Solarium\QueryType\Select\Query\Component\FacetSet &$facetSet){
-        $facetSet->createFacetField($this->field)
-            ->setField($this->field)
+        $facetSet->createFacetField($this->get_name())
+            ->setField($this->get_field())
             ->addExcludes($this->excludes);
     }
 
     function apply($value){
 
-       return \TheFold\FastPress\Solr::create_query_string($this->get_filter_name(), $value); 
+       return \TheFold\FastPress\Solr::create_query_string($this->get_field(), $value); 
     }
 }

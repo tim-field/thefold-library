@@ -878,6 +878,7 @@ class Solr implements Engine{
          $name = $facet->get_filter_name();
 
          if(!is_null($value)) {
+             
              $query->createFilterQuery($name)
                  ->setQuery($facet->apply($value))
                  ->addTags([$name,'facets']);
