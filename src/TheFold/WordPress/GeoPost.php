@@ -135,9 +135,9 @@ trait GeoPost {
 
     }
     
-    protected function geocode($address, $locale=null)
+    protected function geocode($address)
     {
-        return current($this->get_geotools()->batch($this->get_geocoder($locale))->geocode($address)->serie());
+        return current($this->get_geotools()->batch($this->get_geocoder())->geocode($address)->serie());
     }
 
     protected function geohash($latlng)
@@ -164,22 +164,27 @@ trait GeoPost {
         return $this->formatter;
     }
 
-    protected function get_geocoder($locale=null)
+    protected function get_geocoder()
     {
-        if(!$this->geocoder[$locale]){
+        if(!$this->geocoder){
 
-            $this->geocoder[$locale] = new \Geocoder\Geocoder();
+            $this->geocoder = new \Geocoder\Geocoder();
 
             $adapter  = new \Geocoder\HttpAdapter\CurlHttpAdapter();
 
-            $this->geocoder[$locale]->registerProviders([
-                //new \Geocoder\Provider\GoogleMapsProvider($adapter,$locale)
+            $this->geocoder->registerProviders([ //pAdapterInterface $adapter, $locale = null, $region = null, $useSsl = false, $apiKey = null
+                new \Geocoder\Provider\GoogleMapsProvider($adapter, 
+                    apply_filters('geopost-geocoder-locale',null), 
+                    apply_filters('geopost-geocoder-region',null), 
+                    apply_filters('geopost-geocoder-useSsl',false), 
+                    apply_filters('geopost-geocoder-apiKey',null)
+                )
                 //new \Geocoder\Provider\OpenStreetMapProvider($adapter,$locale)
-                new \Geocoder\Provider\BingMapsProvider($adapter,'Au2mF_L2VinZkCtg2qo-5gz03auLyAdBsmr1MAakcOnTH7M9uQVpo_7WXu8ukOYs')
+                //new \Geocoder\Provider\BingMapsProvider($adapter,'Au2mF_L2VinZkCtg2qo-5gz03auLyAdBsmr1MAakcOnTH7M9uQVpo_7WXu8ukOYs')
             ]);
         }
 
-        return $this->geocoder[$locale];
+        return $this->geocoder;
     }
 
 }
