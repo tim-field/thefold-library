@@ -4,6 +4,7 @@ function TheFoldComponentReplace(config) {
     this.name = config.name;
     this.$paging = null;
     this.page_number = null;
+    this.foldMap= config.map;
     var _this = this;
 
     this.init = function(page) {
@@ -21,7 +22,12 @@ function TheFoldComponentReplace(config) {
                 var m = $a.attr('href').match(/page=([0-9]+)/);
                 _this.page_number = m[1];
                 
-                _this.page.update();
+                _this.page.update(_this.name, function(){
+                
+                    if(_this.foldMap){
+                        _this.foldMap.centerMap();
+                    }
+                });
             });
         }
     };
