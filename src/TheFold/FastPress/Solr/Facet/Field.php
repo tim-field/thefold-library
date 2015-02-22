@@ -28,8 +28,8 @@ class Field extends \TheFold\FastPress\Solr\Facet{
     }
 
     function create(\Solarium\QueryType\Select\Query\Component\FacetSet &$facetSet){
-        $facetSet->createFacetField($this->field)
-            ->setField($this->field)
+        $facetSet->createFacetField($this->get_name())
+            ->setField($this->get_field())
             ->addExcludes($this->excludes);
     }
 
