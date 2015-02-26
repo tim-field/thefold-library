@@ -819,13 +819,13 @@ class Solr implements Engine{
 
      if(!empty($params['fq'])) {
 
-         foreach($params['fq'] as $name => $facet_query) {
+         foreach($params['fq'] as $name => $filter_query) {
              
              $query->createFilterQuery($name)->setQuery(
                  
-                 $facet_query instanceof \Closure 
-                 ? $facet_query($helper, $query)
-                 : $facet_query
+                 $filter_query instanceof \Closure 
+                 ? $filter_query($helper, $query)
+                 : $filter_query
              );
          }
      }
