@@ -916,11 +916,16 @@ class Solr implements Engine{
          $query->addSorts($sorts);
      }
 
+     $start = isset($params['offset']) ? $params['offset'] : 0;
+
      if($params['nopaging']) {
-         $query->setRows($params['rows']);
+         $query->setStart($start)->setRows($params['rows']);
      }
      else {
-         $query->setStart( ($params['page']-1) * $params['posts_per_page'] )->setRows($params['posts_per_page']);
+
+         $query->setStart(
+             $start ?: (($params['page']-1) * $params['posts_per_page'])
+         )->setRows($params['posts_per_page']);
      }
 
      return $query;
