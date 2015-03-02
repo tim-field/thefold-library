@@ -58,6 +58,7 @@ trait GeoPost {
 
             $address = $this->geocode($raw_address);
             $location = [];
+            $full_address = [];
 
             if($address){
 
@@ -68,6 +69,9 @@ trait GeoPost {
                 $location['address'] = $raw_address;//this aint right
                 $location['lat'] = $address->getLatitude();
                 $location['lng'] = $address->getLongitude();
+
+                //see vendor/willdurand/geocoder/src/Geocoder/Result/Geocoded.php toArray
+                $full_address = $address->toArray();
             }
 
             if($location = array_filter($location)){
@@ -75,8 +79,13 @@ trait GeoPost {
                 update_post_meta($post_id, $this->geocode_field, $location); 
                 update_post_meta($post_id, $this->geocoded_address_field, $location['address']); 
             }
-            else{
-                print_r($geocode); exit();
+
+            if($full_address){
+            
+                foreach($full_address as $field => $value){
+
+                    update_post_meta($post_id,'geopost_'.strtolower($field), $value);
+                }
             }
         }
 
