@@ -819,13 +819,13 @@ class Solr implements Engine{
 
      if(!empty($params['fq'])) {
 
-         foreach($params['fq'] as $name => $facet_query) {
+         foreach($params['fq'] as $name => $filter_query) {
              
              $query->createFilterQuery($name)->setQuery(
                  
-                 $facet_query instanceof \Closure 
-                 ? $facet_query($helper, $query)
-                 : $facet_query
+                 $filter_query instanceof \Closure 
+                 ? $filter_query($helper, $query)
+                 : $filter_query
              );
          }
      }
@@ -916,11 +916,16 @@ class Solr implements Engine{
          $query->addSorts($sorts);
      }
 
+     $start = isset($params['offset']) ? $params['offset'] : 0;
+
      if($params['nopaging']) {
-         $query->setRows($params['rows']);
+         $query->setStart($start)->setRows($params['rows']);
      }
      else {
-         $query->setStart( ($params['page']-1) * $params['posts_per_page'] )->setRows($params['posts_per_page']);
+
+         $query->setStart(
+             $start ?: (($params['page']-1) * $params['posts_per_page'])
+         )->setRows($params['posts_per_page']);
      }
 
      return $query;
