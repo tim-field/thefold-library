@@ -265,4 +265,25 @@ class WordPress{
     static function is_admin(){
         return (is_admin() && ( !defined( 'DOING_AJAX' ) || !\DOING_AJAX ));
     }
+
+    static function xpath_add_class(array $xpath_class, $html){
+
+        if(empty($html)){
+            return $html;
+        }
+
+        $dom = new \DOMDocument;
+        $dom->loadHTML($html);
+        $xpath = new \DOMXPath($dom);
+
+        foreach($xpath_class as $xquery => $class){
+            $els = $xpath->query($xquery);
+            foreach($els as $el){
+                $el->setAttribute('class',
+                    $el->getAttribute('class') . $class);
+            }
+        }
+
+        return $dom->saveHtml();
+    }
 }
