@@ -273,7 +273,7 @@ class WordPress{
         }
 
         $dom = new \DOMDocument;
-        $dom->loadHTML($html);
+        $dom->loadHTML($html, \LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD);
         $xpath = new \DOMXPath($dom);
 
         foreach($xpath_class as $xquery => $class){
