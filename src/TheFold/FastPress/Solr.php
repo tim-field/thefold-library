@@ -84,7 +84,7 @@ class Solr implements Engine{
  //interface 
  function index_post(\WP_Post $post)
  {
-     $post_types = (array) apply_filters('fastpress_post_types', WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_types'));
+     $post_types = (array) apply_filters('fastpress_post_types', (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_types'));
 
      if(in_array($post->post_type, $post_types)) {
 
@@ -298,14 +298,14 @@ class Solr implements Engine{
 
  protected function valid_status($status){
     
-     return in_array($status, (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_status','publish'));
+     return in_array($status, (array) apply_filters('fastpress_post_status', (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_status','publish')));
  }
 
  protected function valid_role($roles){
 
     foreach($roles as $role){
 
-        if ( in_array($role, (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'user_roles')) ){
+        if ( in_array($role, (array) apply_filters('fastpress_user_roles', (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'user_roles')))){
             return true;
         }
     }
