@@ -157,6 +157,7 @@ class Import
             'tags_input',
             'to_ping',
             'tax_input',
+            'guid'
         );
     }
 
