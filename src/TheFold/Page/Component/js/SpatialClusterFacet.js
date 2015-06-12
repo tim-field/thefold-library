@@ -27,8 +27,6 @@ function TheFoldSpatialClusterFacet(config) {
         
         var update = _.debounce(function(e){
 
-            console.log(_this.foldMap.map.getZoom());
-
             if(_this.ignoreIdle || _this.foldMap.centeringMap){
                 return;
             }
@@ -94,7 +92,6 @@ function TheFoldSpatialClusterFacet(config) {
      */
     this.markerZoom = function() {
         
-        //console.log(this.post_id);
         //_this.foldMap.map.setCenter(this.);
         _this.foldMap.map.panTo(this.getPosition());
         _this.foldMap.map.setZoom(_this.foldMap.map.getZoom() + 2);
