@@ -66,6 +66,7 @@ class GravityForm
     {
         return ( $field['cssClass'] == $name || 
                 $field['inputName'] == $name || 
+                $field['label'] == $name || 
                 $field['adminLabel'] == $name);  
     }
 }
