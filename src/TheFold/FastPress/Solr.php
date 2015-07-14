@@ -362,7 +362,8 @@ class Solr implements Engine{
          }
          else{
             unset($this->pending_updates[$solr_id]);
-            //add it as a delete then I guess. 
+            //add it as a delete then I guess. Yes this is a good idea, takes
+            //care of delete published to pending status etc 
             $this->pending_deletes[$solr_id] = true;
          }
 
