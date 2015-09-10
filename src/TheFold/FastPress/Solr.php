@@ -236,6 +236,22 @@ class Solr implements Engine{
  {
      $resultset = $this->get_resultset($qparams, $reuse);
 
+     if(method_exists($this->facets[$name],'parse_result')){
+
+         return $this->facets[$name]->parse_result(
+             $resultset->getFacetSet()->getFacet($name));
+
+     } else {
+         return $this->get_facet_legacy($name,$params,$resuse);	
+     }
+ }
+
+ function get_facet_legacy($name, $qparams=null, $reuse=true)
+ {
+     trigger_error("Deprecated function called.", \E_USER_DEPRECATED );
+
+     $resultset = $this->get_resultset($qparams, $reuse);
+
      $facets = $resultset->getFacetSet()->getFacet($name);
 
      $return = [];

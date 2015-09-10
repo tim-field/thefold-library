@@ -44,4 +44,29 @@ abstract class Facet{
     {
         return $this->get_name();
     }
+    
+    function render_results($params=[]) 
+    {
+        $params = array_replace_recursive([
+            'template'=>'partials/facet',
+            'name'=>$this->name,
+            'label'=>$this->get_label()
+        ], $params);
+
+        $name = strtolower( (new \ReflectionClass(get_called_class()))->getShortName() );
+
+        \TheFold\WordPress::render_template($params['template'], $name, $params); 
+    }
+
+    function parse_result(/*\Solarium\QueryType\Select\Result\Facet*/ $fields){
+        $return = [];
+
+        foreach($fields as $value => $count){
+            $return[$value] = $count;
+        }
+
+        ksort($return);
+
+        return $return;
+    }
 }

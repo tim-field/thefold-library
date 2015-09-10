@@ -1,6 +1,6 @@
 <?php
 namespace TheFold\FastPress\Solr\Facet;
-//untested
+
 class Query extends \TheFold\FastPress\Solr\Facet{
 
     public $name;
@@ -23,7 +23,7 @@ class Query extends \TheFold\FastPress\Solr\Facet{
 
     function create(\Solarium\QueryType\Select\Query\Component\FacetSet &$facetSet){
         $facetSet->createFacetQuery($this->name)
-            ->setQuery($query)
+            ->setQuery($this->query)
             ->addExclude($this->name);
     }
 
@@ -31,4 +31,22 @@ class Query extends \TheFold\FastPress\Solr\Facet{
 
        return $this->query;
     }
+    
+    function render($value, $count)
+    {
+        return $this->label.' ('.$count.')';
+    }
+
+    function parse_result( /* \Solarium\QueryType\Select\Result\Facet\Query */ $query){
+
+        $return = [];
+        $count = $query->getValue();
+
+        if($count){
+            $return[$this->name] = $count;
+        }
+
+        return $return;
+    }
+    
 }
