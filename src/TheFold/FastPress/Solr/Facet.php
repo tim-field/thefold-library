@@ -62,7 +62,7 @@ abstract class Facet{
         $return = [];
 
         foreach($fields as $value => $count){
-            $return[$value] = $count;
+            if($count) $return[$value] = $count;
         }
 
         ksort($return);
