@@ -9,51 +9,51 @@ use \TheFold\WordPress\Cache;
 use \TheFold\WordPress\ACF;
 
 class Solr implements Engine{
-    
+
     use Cache; 
 
- protected static $instance;
+    protected static $instance;
 
     const AUTO_COMMIT_AT = 300;
 
- protected $hostname;
- protected $port;
- protected $path;
- protected $client;
- protected $facets = [];// = ['category'=>'always','tag'=>'always'];
- protected $last_resultset = null;
- protected $result_count = null;
- protected $update_document;
- protected $pending_updates = [];
- protected $pending_deletes = [];
- protected $post_mapping = null;
- protected $user_mapping = null;
- protected $mapping = null;
- protected $with_facets = false;
- protected $core_post_fields = [
-         'ID',
-         'id',
-         'post_author',
-         'post_name',
-         'post_type',
-         'post_title',
-         'post_date',
-         'post_date_gmt',
-         'post_content',
-         'post_excerpt',
-         'post_status',
-         'comment_status',
-         'ping_status',
-         'post_password',
-         'post_parent',
-         'post_modified',
-         'post_modified_gmt',
-         'menu_order',
-         'post_mime_type',
-         'comment_count',
-         'category_ancestors',
-         'category_taxonomy'
-     ];
+    protected $hostname;
+    protected $port;
+    protected $path;
+    protected $client;
+    protected $facets = [];// = ['category'=>'always','tag'=>'always'];
+    protected $last_resultset = null;
+    protected $result_count = null;
+    protected $update_document;
+    protected $pending_updates = [];
+    protected $pending_deletes = [];
+    protected $post_mapping = null;
+    protected $user_mapping = null;
+    protected $mapping = null;
+    protected $with_facets = false;
+    protected $core_post_fields = [
+        'ID',
+        'id',
+        'post_author',
+        'post_name',
+        'post_type',
+        'post_title',
+        'post_date',
+        'post_date_gmt',
+        'post_content',
+        'post_excerpt',
+        'post_status',
+        'comment_status',
+        'ping_status',
+        'post_password',
+        'post_parent',
+        'post_modified',
+        'post_modified_gmt',
+        'menu_order',
+        'post_mime_type',
+        'comment_count',
+        'category_ancestors',
+        'category_taxonomy'
+    ];
 
 
  static function get_instance($path=null, $hostname=null, $port=null)
@@ -734,6 +734,15 @@ class Solr implements Engine{
      $helper = $query->getHelper();
 
      //$query->setFields(array('id'));
+     if(isset($params['p'])){
+         $params['fields']['id'] = $params['p'];
+         unset($params['p']);
+     }
+
+     if(isset($params['name'])){
+         $params['fields']['post_name'] = $params['name'];
+         unset($params['name']);
+     }
 
      if(isset($params['boost'])){
          $dismax = $query->getDisMax();
@@ -776,9 +785,13 @@ class Solr implements Engine{
          unset($params['post_status']);
      }
 
-     if(isset($params['blogid']) && $params['blogid'] === '*'){
-     
-        $query->createFilterQuery('allblogs')->setQuery('blogid:*');
+     if(isset($params['blogid'])){
+
+         if($params['blogid'] === '*'){
+             $query->createFilterQuery('allblogs')->setQuery('blogid:*');
+         } else {
+             $params['fields']['blogid'] = $params['blogid'];
+         }
      }
      elseif(!isset($params['blogid']) && is_multisite() && $params['wp_class'] != 'WP_User')
      {
@@ -1067,10 +1080,10 @@ class Solr implements Engine{
  {
      $have_switched = false;
 
-     if(is_multisite() && !empty($fields['blogid']) && $fields['blogid'] != get_current_blog_id()){
+     /* if(is_multisite() && !empty($fields['blogid']) && $fields['blogid'] != get_current_blog_id()){
          switch_to_blog($fields['blogid']); 
          $have_switched = true;
-     }
+     } */
 
      $fields['post_date'] = date('Y-m-d H:i:s', strtotime($fields['post_date']));
      $fields['post_date_gmt'] = date('Y-m-d H:i:s', strtotime($fields['post_date_gmt']));
@@ -1086,6 +1099,9 @@ class Solr implements Engine{
 
      $safe_fields['ID'] = $fields['id'];
      unset($safe_fields['id']);
+
+     //Prevents WP hitting the database
+     $safe_fields['filter'] = 'raw';
 
      $post = new \WP_Post((object)$safe_fields);
 

@@ -82,6 +82,8 @@ class FastPress implements Engine
 
         $post = $this->next_post();
         setup_postdata($post);
+
+        return $post;
     }
 
     function have_posts() {

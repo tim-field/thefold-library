@@ -117,7 +117,7 @@ class CustomPostType extends QuickConfig
                 return $messages;
             });*/
 
-        },99);
+        },99); // why 99 ?
     }
 }
 
