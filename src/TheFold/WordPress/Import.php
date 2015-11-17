@@ -161,6 +161,9 @@ class Import
         );
     }
 
+    // Use this with 
+    // set_post_thumbnail( $parent_post_id, $attach_id );
+    //
     static function create_attachment($path, $basename=null, $replace=false, $uniquename=null){
 
         if(empty($path) || !is_string($path)){
@@ -187,7 +190,7 @@ class Import
         $wp_filetype = wp_check_filetype($basename, null );
         
         if($replace || !file_exists($file)){
-            copy($path,$file);
+                copy($path,$file);
         }
 
         $attachment_id = wp_insert_attachment(array(
