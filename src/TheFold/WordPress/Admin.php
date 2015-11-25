@@ -3,6 +3,7 @@
 namespace TheFold\WordPress;
 
 use TheFold\WordPress\Setting;
+use TheFold\WordPress;
 
 abstract class Admin
 {

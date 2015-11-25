@@ -161,7 +161,23 @@ class Import
         );
     }
 
-    static function create_attachment($path, $basename=null, $replace=false, $uniquename=null){
+    // Use this with 
+    // set_post_thumbnail( $parent_post_id, $attach_id );
+    //
+    static function create_attachment($path, $basename=null, $replace=false, $uniquename=null, $parent_post_id=0){
+
+        if(is_array($path)){
+
+            $path += [
+                'basename' => null,
+                'replace' => false,
+                'uniquename' => null,
+                'parent_post_id' => 0
+            ];
+
+            extract($path);
+        }
+
 
         if(empty($path) || !is_string($path)){
             return null;
@@ -187,17 +203,17 @@ class Import
         $wp_filetype = wp_check_filetype($basename, null );
         
         if($replace || !file_exists($file)){
-            copy($path,$file);
+                copy($path,$file);
         }
 
         $attachment_id = wp_insert_attachment(array(
-            'guid' => $file, 
+            'guid' => $path, 
             'post_mime_type' => $wp_filetype['type'],
             'post_title' => preg_replace('/\.[^.]+$/', '', $basename),
             'post_name' => $uniquename,
             'post_content' => '',
             'post_status' => 'inherit'
-        ), $file, $parent = 0);
+        ), $file, $parent_post_id);
 
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         $attachment_data = wp_generate_attachment_metadata( $attachment_id, $file );
