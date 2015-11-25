@@ -10,9 +10,17 @@ class Field
     public $section;
     public $default;
 
-    function __construct($name, $title=null, Section $section=null, $display_callback=null)
+    function __construct($name, $title=null, Section $section=null, $display_callback=null, $default=null)
     {
         if(is_array($name)){
+
+            $name += [
+                'title' => null,
+                'section' => null,
+                'display_callback' => null,
+                'default' => null
+            ];
+
             extract($name);
         }
 
@@ -20,8 +28,7 @@ class Field
         $this->title = $title;
         $this->display_callback = $display_callback;
         $this->section = $section;
-
-        $this->default = isset($default) ? $default : null;
+        $this->default = $default;
     }
 
     function get_section() {
@@ -50,11 +57,11 @@ class Field
                 switch($this->display_callback){
                     
                 case 'textarea':
-                    echo "<textarea rows=\"10\" cols=\"50\" id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]'>{$value}</textarea>";
+                    echo "<textarea rows=\"10\" cols=\"50\" id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' placeholder='{$this->default}'>{$value}</textarea>";
                     break;
 
                 default: 
-                    echo "<input id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' type='text' value='{$value}' />"; 
+                    echo "<input id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' placeholder='{$this->default}' type='text' value='{$value}' />"; 
 
                 }
             };

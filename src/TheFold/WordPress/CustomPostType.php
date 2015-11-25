@@ -26,6 +26,10 @@ class CustomPostType extends QuickConfig
         return array();
     }
 
+    protected function default_public(){
+        return true;
+    }
+
     protected function default_supports(){
         return array(
                 'title',
@@ -64,7 +68,7 @@ class CustomPostType extends QuickConfig
                     'search_items' => 'Search '.$plural,
                     'parent_item_colon' => 'Parent '.$this->name
                 ],
-                'public' => true,
+                'public' => $this->public,
                 'rewrite' => array('slug' => $this->slug, 'with_front' => $this->rewrite_with_front ),
                 'menu_position' => $this->menu_position,
                 'menu_icon' => $this->menu_icon,
