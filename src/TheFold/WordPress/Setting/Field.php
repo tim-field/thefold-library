@@ -9,8 +9,9 @@ class Field
     public $display_callback;
     public $section;
     public $default;
+    public $type;
 
-    function __construct($name, $title=null, Section $section=null, $display_callback=null, $default=null)
+    function __construct($name, $title=null, Section $section=null, $display_callback=null, $default=null,$type='text')
     {
         if(is_array($name)){
 
@@ -18,7 +19,8 @@ class Field
                 'title' => null,
                 'section' => null,
                 'display_callback' => null,
-                'default' => null
+                'default' => null,
+                'type' => 'text'
             ];
 
             extract($name);
@@ -29,6 +31,7 @@ class Field
         $this->display_callback = $display_callback;
         $this->section = $section;
         $this->default = $default;
+        $this->type = $type;
     }
 
     function get_section() {
@@ -61,7 +64,7 @@ class Field
                     break;
 
                 default: 
-                    echo "<input id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' placeholder='{$this->default}' type='text' value='{$value}' />"; 
+                    echo "<input id='{$setting_group}_{$this->name}' name='{$setting_group}[{$this->name}]' placeholder='{$this->default}' type='{$this->type}' value='{$value}' />"; 
 
                 }
             };
