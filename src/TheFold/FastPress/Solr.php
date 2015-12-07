@@ -54,7 +54,7 @@ class Solr implements Engine{
         'category_ancestors',
         'category_taxonomy'
     ];
-
+    protected $post_type;
 
  static function get_instance($path=null, $hostname=null, $port=null)
  {
@@ -78,15 +78,15 @@ class Solr implements Engine{
              $this->commit_pending(); 
          },100);
      }
+
+     $this->post_types = (array) apply_filters('fastpress_post_types', (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_types'));
  }
 
 
  //interface 
  function index_post(\WP_Post $post)
  {
-     $post_types = (array) apply_filters('fastpress_post_types', (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_types'));
-
-     if(in_array($post->post_type, $post_types)) {
+     if(in_array($post->post_type, $this->post_types)) {
 
          $this->update_post($post);
 
@@ -300,16 +300,30 @@ class Solr implements Engine{
 
  public function update_post(\WP_Post $post)
  {
-     $this->pending_updates[$this->get_solr_id($post->ID,'WP_Post')] = [ 'ID' => $post->ID, 'blog_id' => get_current_blog_id(), 'class'=> 'WP_Post' ];
+     $key = $this->get_solr_id($post->ID,'WP_Post');
 
-     if(count($this->pending_updates) >= self::AUTO_COMMIT_AT){
-         $this->commit_pending();
+     if(!isset($this->pending_updates[$key])){
+
+         $this->pending_updates[$key] = [ 'ID' => $post->ID, 'blog_id' => get_current_blog_id(), 'class'=> 'WP_Post' ];
+
+         if(count($this->pending_updates) >= self::AUTO_COMMIT_AT){
+             $this->commit_pending();
+         }
      }
  }
 
  public function update_user(\WP_User $user)
  {
-    $this->pending_updates[$this->get_solr_id($user->ID,'WP_User')] = ['ID' =>$user->ID, 'blog_id' => get_current_blog_id(), 'class'=> 'WP_User'];
+     $key = $this->get_solr_id($user->ID,'WP_User');
+
+     if(!isset($this->pending_updates[$key])){
+
+         $this->pending_updates[$key] = ['ID' =>$user->ID, 'blog_id' => get_current_blog_id(), 'class'=> 'WP_User'];
+
+         if(count($this->pending_updates) >= self::AUTO_COMMIT_AT){
+             $this->commit_pending();
+         }
+     }
  }
 
  protected function valid_status($status){
