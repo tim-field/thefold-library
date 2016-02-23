@@ -1,5 +1,5 @@
 <?php
-namespace TheFold\Wordpress;
+namespace TheFold\WordPress;
 
 /**
  *     $ID = Import::import_post(
@@ -172,7 +172,9 @@ class Import
                 'basename' => null,
                 'replace' => false,
                 'uniquename' => null,
-                'parent_post_id' => 0
+		'parent_post_id' => 0,
+		'extension' => null,
+		'generate_metadata_cron' => false 
             ];
 
             extract($path);
@@ -184,28 +186,39 @@ class Import
         }
 
         if(!$basename){
-            $basename = basename($path);
+            $basename = pathinfo($path, \PATHINFO_FILENAME);
         }
         
-        if(!$extension = pathinfo($basename, PATHINFO_EXTENSION)){
-            $extension = pathinfo($path, PATHINFO_EXTENSION);
-            $basename .= '.'.$extension;
+        if(!$extension && !$extension = pathinfo($basename, \PATHINFO_EXTENSION)){
+            $extension = pathinfo($path, \PATHINFO_EXTENSION);
         }
+        
+	$basename .= '.'.$extension;
 
         if(!$uniquename){
-            $uniquename = md5($path).'.'.$extension;
+	    $uniquename = md5($path);
         }
 
         //I don't know what this is for ?
-        $path = str_replace(WP_CONTENT_URL,WP_CONTENT_DIR,$path);
+        //$path = str_replace(WP_CONTENT_URL,WP_CONTENT_DIR,$path);
 
-        $file = wp_upload_dir()['path'].'/'.$uniquename;
+        $file = wp_upload_dir()['path'].'/'.$uniquename.'.'.$extension;
         $wp_filetype = wp_check_filetype($basename, null );
-        
-        if($replace || !file_exists($file)){
-                copy($path,$file);
-        }
 
+	$exists = file_exists($file);
+
+	if($replace || !$exists){
+	    copy($path,$file);
+	}
+
+	if($exists){
+            global $wpdb;
+
+            if($attachment_id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_name = %s", $uniquename))){
+                return $attachment_id;
+            }
+	}
+	
         $attachment_id = wp_insert_attachment(array(
             'guid' => $path, 
             'post_mime_type' => $wp_filetype['type'],
@@ -215,10 +228,21 @@ class Import
             'post_status' => 'inherit'
         ), $file, $parent_post_id);
 
-        require_once(ABSPATH . 'wp-admin/includes/image.php');
-        $attachment_data = wp_generate_attachment_metadata( $attachment_id, $file );
-        wp_update_attachment_metadata( $attachment_id, $attachment_data );
+	if ($generate_metadata_cron) {
+	    
+	    //You'll need to have an action that is ready to handle this    
+	    wp_schedule_single_event(time(),$generate_metadata_cron,[$attachment_id,$file]);
+	} else {
+	    static::generate_metadata($attachment_id, $file);
+	}
 
         return $attachment_id;
+    }
+
+    static function generate_metadata($attachment_id, $file) {
+
+	require_once(ABSPATH . 'wp-admin/includes/image.php');
+	$attachment_data = wp_generate_attachment_metadata( $attachment_id, $file );
+	wp_update_attachment_metadata( $attachment_id, $attachment_data );
     }
 }
