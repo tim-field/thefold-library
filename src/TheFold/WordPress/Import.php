@@ -242,7 +242,8 @@ class Import
     static function generate_metadata($attachment_id, $file) {
 
 	require_once(ABSPATH . 'wp-admin/includes/image.php');
-	$attachment_data = wp_generate_attachment_metadata( $attachment_id, $file );
-	wp_update_attachment_metadata( $attachment_id, $attachment_data );
+	wp_maybe_generate_attachment_metadata($attachment_id);
+	//$attachment_data = wp_generate_attachment_metadata( $attachment_id, $file );
+	//wp_update_attachment_metadata( $attachment_id, $attachment_data );
     }
 }
