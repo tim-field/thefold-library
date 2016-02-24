@@ -51,9 +51,9 @@ class CustomTaxonomy extends QuickConfig
                 ),
             )); 
 
-            register_taxonomy_for_object_type( $this->type, $this->object_type );
-               
-        },9999);
+	    register_taxonomy_for_object_type( $this->type, $this->object_type );
+
+        },100);
     }
  
     protected function default_rewrite_with_front() {
