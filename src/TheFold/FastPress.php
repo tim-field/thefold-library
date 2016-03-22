@@ -70,6 +70,8 @@ class FastPress implements Engine
     {
         $this->posts = $this->get_posts($args);
 
+        $this->current_post = -1;
+
         $this->post_count = count($this->posts);
     }
     
