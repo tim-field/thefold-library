@@ -174,6 +174,7 @@ class Import
                 'uniquename' => null,
 		'parent_post_id' => 0,
 		'extension' => null,
+                'title' => null,
 		'generate_metadata_cron' => false 
             ];
 
@@ -222,7 +223,7 @@ class Import
         $attachment_id = wp_insert_attachment(array(
             'guid' => $path, 
             'post_mime_type' => $wp_filetype['type'],
-            'post_title' => preg_replace('/\.[^.]+$/', '', $basename),
+            'post_title' => $title ?: preg_replace('/\.[^.]+$/', '', $basename),
             'post_name' => $uniquename,
             'post_content' => '',
             'post_status' => 'inherit'
@@ -242,7 +243,7 @@ class Import
     static function generate_metadata($attachment_id, $file) {
 
 	require_once(ABSPATH . 'wp-admin/includes/image.php');
-	wp_maybe_generate_attachment_metadata($attachment_id);
+	wp_maybe_generate_attachment_metadata(get_post($attachment_id));
 	//$attachment_data = wp_generate_attachment_metadata( $attachment_id, $file );
 	//wp_update_attachment_metadata( $attachment_id, $attachment_data );
     }
