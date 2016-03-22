@@ -189,7 +189,7 @@ class FastPress implements Engine
 
     function get_previous_posts_link($label = null) {
         
-        return $this->get_previous_page_link($lable);
+        return $this->get_previous_page_link($label);
     }
 
     function get_previous_page_link($label = null) {
