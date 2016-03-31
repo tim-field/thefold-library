@@ -812,6 +812,8 @@ class Solr implements Engine{
         $params['fields']['blogid'] = get_current_blog_id();
      }
 
+     $query->addParam('TZ',get_option('timezone_string'));
+
      if(isset($params['date_range'])) {
 
          $days_out = isset($params['date_range']['days_out']) ? $params['date_range']['days_out'] : 1;
