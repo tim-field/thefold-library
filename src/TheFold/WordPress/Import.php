@@ -21,7 +21,7 @@ namespace TheFold\WordPress;
 
                 'attending_count' => 'attending_count',
                 'unsure_count' => 'unsure_count',
-                
+
                 'fb_id' => 'id',
             ),
             $detail
@@ -64,8 +64,8 @@ class Import
 
             $core['ID'] = $ID;
         }
-        
-        $ID = empty($core['ID']) ? wp_insert_post($core, true) : wp_update_post($core, true); 
+
+        $ID = empty($core['ID']) ? wp_insert_post($core, true) : wp_update_post($core, true);
 
         if (is_wp_error($ID)){
             throw new \Exception($ID->get_error_message());
@@ -94,16 +94,16 @@ class Import
         )
     *
     * @param $field_map is an associative array of wp_fields to import fields
-    * @param $data raw data that will be used to mapped to wp_fields ready to pass to import_post 
+    * @param $data raw data that will be used to mapped to wp_fields ready to pass to import_post
     * @return associative array ready for WP to use @see import_post
     *
     * */
-    static function map_data($field_map, $data) 
+    static function map_data($field_map, $data)
     {
         if( !is_array($field_map) ) {
             throw new \Exception('$field_map is not an array');
         }
-        
+
         if( (!is_array($data) && !is_object($data)) || empty($data) ) {
             throw new \Exception('$data is not an array or object or is empty');
         }
@@ -118,12 +118,12 @@ class Import
                 $value = $data_field($data);
             }
             elseif(is_array($data)){
-                $value =  $data[$data_field];
+                $value = isset($data[$data_field]) ?  $data[$data_field] : null;
             }
             elseif(is_object($data)){
                 $value =  $data->$data_field;
             }
-            
+
             $post_data[$wp_field] = $value;
         }
 
@@ -139,7 +139,7 @@ class Import
         return array(
             'ID',
             'menu_order',
-            'comment_status', 
+            'comment_status',
             'ping_status',
             'pinged',
             'post_author',
@@ -161,7 +161,7 @@ class Import
         );
     }
 
-    // Use this with 
+    // Use this with
     // set_post_thumbnail( $parent_post_id, $attach_id );
     //
     static function create_attachment($path, $basename=null, $replace=false, $uniquename=null, $parent_post_id=0){
@@ -175,7 +175,7 @@ class Import
 		'parent_post_id' => 0,
 		'extension' => null,
                 'title' => null,
-		'generate_metadata_cron' => false 
+		'generate_metadata_cron' => false
             ];
 
             extract($path);
@@ -189,11 +189,11 @@ class Import
         if(!$basename){
             $basename = pathinfo($path, \PATHINFO_FILENAME);
         }
-        
+
         if(!$extension && !$extension = pathinfo($basename, \PATHINFO_EXTENSION)){
             $extension = pathinfo($path, \PATHINFO_EXTENSION);
         }
-        
+
 	$basename .= '.'.$extension;
 
         if(!$uniquename){
@@ -219,9 +219,9 @@ class Import
                 return $attachment_id;
             }
 	}
-	
+
         $attachment_id = wp_insert_attachment(array(
-            'guid' => $path, 
+            'guid' => $path,
             'post_mime_type' => $wp_filetype['type'],
             'post_title' => $title ?: preg_replace('/\.[^.]+$/', '', $basename),
             'post_name' => $uniquename,
@@ -230,8 +230,8 @@ class Import
         ), $file, $parent_post_id);
 
 	if ($generate_metadata_cron) {
-	    
-	    //You'll need to have an action that is ready to handle this    
+
+	    //You'll need to have an action that is ready to handle this
 	    wp_schedule_single_event(time(),$generate_metadata_cron,[$attachment_id,$file]);
 	} else {
 	    static::generate_metadata($attachment_id, $file);
