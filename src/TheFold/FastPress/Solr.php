@@ -10,7 +10,7 @@ use \TheFold\WordPress\ACF;
 
 class Solr implements Engine{
 
-    use Cache; 
+    use Cache;
 
     protected static $instance;
 
@@ -75,7 +75,7 @@ class Solr implements Engine{
 
          add_action('shutdown',function(){
 
-             $this->commit_pending(); 
+             $this->commit_pending();
          },100);
      }
 
@@ -83,7 +83,7 @@ class Solr implements Engine{
  }
 
 
- //interface 
+ //interface
  function index_post(\WP_Post $post)
  {
      if(in_array($post->post_type, $this->post_types)) {
@@ -93,7 +93,7 @@ class Solr implements Engine{
          return true;
      }
 
-     return false; 
+     return false;
  }
 
  function index_user(\WP_User $user)
@@ -131,22 +131,22 @@ class Solr implements Engine{
             $this->facets[$v->get_name()] = $v;
          }
          elseif(is_string($v)){
-             //legacy format 
+             //legacy format
              $this->facets[$k] = new Solr\Facet\Field($k);
         }
      }
-     
+
      $this->with_facets = true;
  }
 
  static function format_date($thedate)
- {                                   
+ {
      //time must always be in UTC ( this is what Z represents) https://cwiki.apache.org/confluence/display/solr/Working+with+Dates
      //we strip php's +00:00 from the end of the date replace it with Z
      //note call to gmdate ( which gives us a UTC time )
      return preg_replace('#\+00:00$#','Z', gmdate('c',
          // catch timestamps
-         (is_numeric($thedate) && strlen($thedate) == 10) ? $thedate : strtotime($thedate))); 
+         (is_numeric($thedate) && strlen($thedate) == 10) ? $thedate : strtotime($thedate)));
  }
 
   //interface
@@ -163,7 +163,7 @@ class Solr implements Engine{
          $posts = $this->cache_get($params['cache_key']);
 
          if(!is_null($posts)){
-             return $posts; 
+             return $posts;
          }
      }
 
@@ -193,10 +193,10 @@ class Solr implements Engine{
 
      if($posts){
 
-         if(!isset($params['blogid']) || $params['blogid'] !== '*'){ 
+         if(!isset($params['blogid']) || $params['blogid'] !== '*'){
              update_post_caches($posts, isset($params['post_type']) ? $params['post_type'] : 'post', true, true);
          }
-         
+
          reset($posts);
      }
 
@@ -215,14 +215,14 @@ class Solr implements Engine{
      $ids= [];
 
      $resultset = $this->get_resultset($params,false);
-     
+
      $this->result_count = $resultset->getNumFound();
-     
+
      foreach($resultset as $document){
 
          $fields = $document->getFields();
          $users[] = $this->init_wp_user($fields);
-         $ids[] = $fields['id']; 
+         $ids[] = $fields['id'];
      }
 
      cache_users($ids);
@@ -242,7 +242,7 @@ class Solr implements Engine{
              $resultset->getFacetSet()->getFacet($name));
 
      } else {
-         return $this->get_facet_legacy($name,$params,$resuse);	
+         return $this->get_facet_legacy($name,$params,$resuse);
      }
  }
 
@@ -268,17 +268,17 @@ class Solr implements Engine{
  function get_facets($qparams=null)
  {
      if($qparams){
-           $this->last_resultset = null; 
+           $this->last_resultset = null;
      }
-     
+
      $facets = $this->facets();
 
      $return = array();
      foreach($facets as $facet){
 
          if($values = $this->get_facet($facet,$qparams,true)){
-            
-            $return[$facet] = $values; 
+
+            $return[$facet] = $values;
          }
      }
 
@@ -327,7 +327,7 @@ class Solr implements Engine{
  }
 
  protected function valid_status($status){
-    
+
      return in_array($status, (array) apply_filters('fastpress_post_status', (array) WordPress::get_option(FastPress::SETTING_NAMESPACE,'post_status','publish')));
  }
 
@@ -349,17 +349,17 @@ class Solr implements Engine{
         return;
 
      $mapping = $this->get_mapping();
-    
+
      if (!$mapping) {
          throw new \Exception('No post mapping data. Is your filter returning ?');
      }
 
      foreach($this->pending_updates as $solr_id => $data)
-     { 
+     {
          if(!is_array($data)){
-             //already processed ? 
+             //already processed ?
              user_error('Already processed ? Why is this happening',E_USER_WARNING);
-             continue; 
+             continue;
          }
 
          $post_id = $data['ID'];
@@ -381,7 +381,7 @@ class Solr implements Engine{
              $data = \TheFold\WordPress\Export::export_object($object,$mapping[$class]);
 
              $data = array_filter($data, function($val){
-                    return !is_null($val); 
+                    return !is_null($val);
              });
 
              foreach($data as $field => $value){
@@ -393,7 +393,7 @@ class Solr implements Engine{
          else{
             unset($this->pending_updates[$solr_id]);
             //add it as a delete then I guess. Yes this is a good idea, takes
-            //care of delete published to pending status etc 
+            //care of delete published to pending status etc
             $this->pending_deletes[$solr_id] = true;
          }
 
@@ -407,7 +407,7 @@ class Solr implements Engine{
  public function delete_all($query = null)
  {
      $update = $this->get_update_document();
-     
+
      if(empty($query)){
 
          if(is_multisite()) {
@@ -417,11 +417,11 @@ class Solr implements Engine{
              $query = '*:*';
          }
      }
-     
+
      $update->addDeleteQuery($query);
 
      $update->addCommit();
-     
+
      return $this->get_client()->update($update);
  }
 
@@ -430,7 +430,7 @@ class Solr implements Engine{
      if(!isset($this->mapping['WP_Post'])) {
          $this->mapping['WP_Post'] = $this->get_post_mapping();
      }
-     
+
      if(!isset($this->mapping['WP_User'])) {
          $this->mapping['WP_User'] = $this->get_user_mapping();
      }
@@ -442,9 +442,9 @@ class Solr implements Engine{
  {
 
     if(!$this->user_mapping){
-    
+
         $this->user_mapping = [
-            
+
             'solr_id' => function($user){
                 return $this->get_solr_id($user->ID,'WP_User');
             },
@@ -475,7 +475,7 @@ class Solr implements Engine{
         ];
 
         //If you want anymore use the hook. Meta fields is a can of worms
-        
+
         $this->user_mapping = apply_filters('fastpress_user_mapping', $this->user_mapping);
     }
 
@@ -533,7 +533,7 @@ class Solr implements Engine{
              }
 
          ];
-            
+
          $this->post_mapping = $this->map_taxonomies($this->map_custom_fields($this->post_mapping));
 
          $this->post_mapping = apply_filters('fastpress_post_mapping', $this->post_mapping);
@@ -545,7 +545,7 @@ class Solr implements Engine{
  protected function map_custom_fields($post_mapping)
  {
     $custom_fields = WordPress::get_option(FastPress::SETTING_NAMESPACE,'custom_fields');
-    
+
     if($custom_fields) foreach($custom_fields as $field) {
 
         $type = 's';
@@ -562,7 +562,7 @@ class Solr implements Engine{
                     break;
                 case 'date_time_picker':
                 case 'date_picker':
-                    $type = 'dt'; 
+                    $type = 'dt';
                     $is_date = true;
                     break;
                 case 'google_map':
@@ -572,18 +572,18 @@ class Solr implements Engine{
                     $type = 's';
             }
         }
-        
+
         $type = apply_filters('fastpress_custom_field_type',$type,$field);
 
         $post_mapping["{$field}_{$type}"] = function($post) use ($field, $type){
-            
+
             $value = get_post_meta($post->ID,$field,true);
 
             if($value === ''){
                 $value = $type == 'b' ? false : null;
             }
             elseif($type == 'dt'){
-                $value = $this->format_date($value); 
+                $value = $this->format_date($value);
             }
             elseif($type == 'i'){
                 $value = (int) $value;
@@ -592,7 +592,7 @@ class Solr implements Engine{
                 $value = $value['lat'].','.$value['lng'];
             }
 
-            return apply_filters('fastpress_custom_field_value', 
+            return apply_filters('fastpress_custom_field_value',
                 apply_filters('fastpress_custom_field_value_'.$field, $value, $field),
                 $field);
         };
@@ -706,9 +706,9 @@ class Solr implements Engine{
      }
 
      if($update){
-     
+
          $update->addCommit();
-         
+
          $result = $this->get_client()->update($update);
      }
 
@@ -769,7 +769,7 @@ class Solr implements Engine{
 
          $query->setQuery(
 
-             $query_param instanceof \Closure 
+             $query_param instanceof \Closure
              ? $query_param($helper, $query)
              : $query_param
          );
@@ -779,9 +779,9 @@ class Solr implements Engine{
 
          $ps_queries = [];
          $ps_status = [];
-         
+
          foreach((array)$params['post_status'] as $status){
-            
+
              if($status == 'private'){
                 $ps_queries[] = sprintf('(post_author:%d AND post_status:"private")',get_current_user_id());
              }
@@ -789,7 +789,7 @@ class Solr implements Engine{
                  $ps_status[] = $status;
              }
          }
-         
+
          if($ps_status){
              $ps_queries[] = $this->create_query_string('post_status', $ps_status);
          }
@@ -830,7 +830,7 @@ class Solr implements Engine{
      }
 
      if(isset($params['bounds'])){
-         
+
          foreach($params['bounds'] as $field => $bounds){
 
              $bounds = explode(',', $bounds);
@@ -855,7 +855,7 @@ class Solr implements Engine{
 
      //TODO should be called filter query
      if(!empty($params['fields'])) {
-        
+
          foreach($params['fields'] as $field => $value) {
              $query->createFilterQuery($field.'-field')
                  ->setQuery( $this->create_query_string($field, $value) )
@@ -866,16 +866,16 @@ class Solr implements Engine{
      if(!empty($params['fq'])) {
 
          foreach($params['fq'] as $name => $filter_query) {
-             
+
              $query->createFilterQuery($name)->setQuery(
-                 
-                 $filter_query instanceof \Closure 
+
+                 $filter_query instanceof \Closure
                  ? $filter_query($helper, $query)
                  : $filter_query
              );
          }
      }
-   
+
      //add field
      if(!empty($params['fl'])){
 
@@ -883,7 +883,7 @@ class Solr implements Engine{
 
              $query->addField(
 
-                 $field instanceof \Closure 
+                 $field instanceof \Closure
                  ? $field($helper, $query)
                  : $field
              );
@@ -894,9 +894,9 @@ class Solr implements Engine{
 
          foreach($params['params'] as $field => $value) {
 
-             $query->addParam( $field, 
+             $query->addParam( $field,
 
-                 $value instanceof \Closure 
+                 $value instanceof \Closure
                  ? $value($helper, $query)
                  : $value
              );
@@ -908,7 +908,7 @@ class Solr implements Engine{
          $stats = $query->getStats();
 
          foreach($params['stats']['fields'] as $field){
-            
+
              $stat_field = $stats->createField($field);
 
              foreach($params['stats']['facets'] as $facet){
@@ -924,7 +924,7 @@ class Solr implements Engine{
          $name = $facet->get_filter_name();
 
          if(!is_null($value)) {
-             
+
              $query->createFilterQuery($name)
                  ->setQuery($facet->apply($value))
                  ->addTags([$name,'facets']);
@@ -937,7 +937,7 @@ class Solr implements Engine{
 
          foreach($facets as $facet) {
 
-            $facet->create($facetSet); 
+            $facet->create($facetSet);
          }
      }
 
@@ -975,7 +975,7 @@ class Solr implements Engine{
      }
 
      return $query;
- } 
+ }
 
  protected function facets($as_object=false){
 
@@ -1040,7 +1040,7 @@ class Solr implements Engine{
  protected function init_wp_object($id,$class){
 
     switch($class){
-    
+
         case 'WP_User':
             return get_userdata($id);
 
@@ -1052,7 +1052,7 @@ class Solr implements Engine{
  }
 
  /**
-  * Return true if we should index this object 
+  * Return true if we should index this object
   */
  protected function ok_to_index($object)
  {
@@ -1063,14 +1063,14 @@ class Solr implements Engine{
      if($object instanceof \WP_User){
         return $this->valid_role($object->roles);
      }
-     
+
      return true;
  }
 
  public function get_solr_id($wp_id, $class='WP_Post')
  {
-    if($class == 'WP_Post'){ 
-        return $wp_id.':'.get_current_blog_id();  
+    if($class == 'WP_Post'){
+        return $wp_id.':'.get_current_blog_id();
     }
     elseif ($class== 'WP_User') {
         return $wp_id.':'.$class;
@@ -1082,13 +1082,13 @@ class Solr implements Engine{
 
  public function registerPlugin($name, $object)
  {
-    $this->get_client()->registerPlugin($name,$object); 
+    $this->get_client()->registerPlugin($name,$object);
  }
 
  //TODO add to interface
  public function admin_init()
  {
-     //Admin::get_instance(self::SETTING_NAMESPACE); 
+     //Admin::get_instance(self::SETTING_NAMESPACE);
  }
 
  //take returned solr fields and return a wp post object
@@ -1097,20 +1097,29 @@ class Solr implements Engine{
      $have_switched = false;
 
      /* if(is_multisite() && !empty($fields['blogid']) && $fields['blogid'] != get_current_blog_id()){
-         switch_to_blog($fields['blogid']); 
+         switch_to_blog($fields['blogid']);
          $have_switched = true;
      } */
 
      $fields['post_date'] = date('Y-m-d H:i:s', strtotime($fields['post_date']));
      $fields['post_date_gmt'] = date('Y-m-d H:i:s', strtotime($fields['post_date_gmt']));
-     
+
      $fields['post_modified'] = date('Y-m-d H:i:s', strtotime($fields['post_modified']));
      $fields['post_modified_gmt'] = date('Y-m-d H:i:s', strtotime($fields['post_modified_gmt']));
 
      $safe_fields = [];
      //todo only do this where needed
      foreach($fields as $field => $value) {
-         $safe_fields[ strtolower(str_replace('-','_',$field)) ] = $value;
+
+         $field = strtolower(str_replace('-','_',$field));
+
+         if(preg_match('/(.*)_(s|dt)$/',$field,$m)) {
+             $dynamic_field = $m[1]; //Set dynamic fields to the object
+             //to ensure this doesn't break old code I'll set both
+             $safe_fields[$dynamic_field] = $value;
+         }
+
+         $safe_fields[$field] = $value;
      }
 
      $safe_fields['ID'] = $fields['id'];
