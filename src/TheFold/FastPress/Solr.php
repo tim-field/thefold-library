@@ -812,7 +812,8 @@ class Solr implements Engine{
         $params['fields']['blogid'] = get_current_blog_id();
      }
 
-     $query->addParam('TZ',get_option('timezone_string'));
+     // DON'T DO THIS, ALL DATES ARE STORED IN UTC SO THIS JUST BREAKS THINGS
+     //$query->addParam('TZ',get_option('timezone_string'));
 
      if(isset($params['date_range'])) {
 
