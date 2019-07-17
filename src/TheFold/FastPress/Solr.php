@@ -912,9 +912,11 @@ class Solr implements Engine{
 
              $stat_field = $stats->createField($field);
 
-             foreach($params['stats']['facets'] as $facet){
-                $stat_field->addFacet($facet);
-             }
+	     if (isset($params['stats']['facets'])) {
+             	foreach($params['stats']['facets'] as $facet) {
+                	$stat_field->addFacet($facet);
+             	}
+ 	     }
          }
      }
 
